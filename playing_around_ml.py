@@ -33,7 +33,7 @@ print(f"smpt_send_get_extended_version: {ret}")  # Output the result of sending 
 ret = False
 
 # Wait for a response packet from the device
-print("Waiting for device response...", end='', flush=True)
+print("Waiting for device response.", end='', flush=True)
 while not sm.smpt_new_packet_received(device):
     waiting_dots_animation(1)
 print("Done")
