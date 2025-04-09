@@ -14,3 +14,11 @@ def waiting_dots_animation(wait_time: float):
     print('.', end='', flush=True)
     time.sleep(step_wait_time)
     print('.', end='', flush=True)
+
+def windows_dpi_awareness():
+    """Set the DPI awareness for Windows to avoid blurry text and images."""
+    try:
+        from ctypes import windll
+        windll.shcore.SetProcessDpiAwareness(1)
+    except:
+        pass

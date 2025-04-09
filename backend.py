@@ -16,7 +16,7 @@ stim_duration_s = 10  # stimulation duration in seconds
 
 # channel number (1-8). Refer to labels on device.
 # This number will be adjusted to 0-7 in the code because indexing starts at 0.
-channel_input = 7
+channel_input = 1
 # --- Derived variables ---
 period_ms = (1 / frequency_Hz) * 1000
 channel = channel_input - 1  # Adjust channel number to 0-7 for indexing
