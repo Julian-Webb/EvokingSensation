@@ -1,8 +1,9 @@
 import tkinter
+import logging
+from experimenter_window import ExperimenterWindow
+from stimulator import Stimulator
 from utils import windows_dpi_awareness
 from settings import Settings
-import logging
-
 
 if __name__ == '__main__':
     # --- Internal Settings ---
@@ -10,12 +11,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     # -------------------------
 
+    stimulator = Stimulator()
+    experimenter_window = ExperimenterWindow(stimulator)
 
-    root = tkinter.Tk()
-    root.title('Stimulation Sensation Experiment')
-
-    Settings.amplitude_mA
-
-
-    root.mainloop()
-
+    experimenter_window.mainloop()
