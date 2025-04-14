@@ -4,7 +4,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 # --- Inputs ---
 # TODO check inputs for validity. Period must be larger that pulse duration. Amplitude must be in range. Maybe more.
-amplitude_mA = 2  # amplitude in mA
+amplitude_mA: float = 65  # amplitude in mA
 frequency_Hz = 10  # frequency in Hz
 pulse_width_us = 360  # pulse width in microseconds
 # inter pulse width in microseconds: the time between the positive and negative phase of a pulse

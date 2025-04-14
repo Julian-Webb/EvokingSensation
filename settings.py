@@ -1,4 +1,5 @@
 import logging
+from collections import OrderedDict
 
 
 class Settings:
@@ -14,6 +15,19 @@ class Settings:
     """
     _instance = None
 
+    PARAMETER_OPTIONS = OrderedDict(
+        {
+            'amplitude': {'label': 'Amplitude (mA)', 'range': (0.5, 15), 'increment': 0.5, 'numeric_type': float},
+            'frequency': {'label': 'Frequency (Hz)', 'range': (1, 100), 'increment': 1, 'numeric_type': float},
+            'pulse_width': {'label': 'Pulse Width (µs)', 'range': (1, 1000), 'increment': 10, 'numeric_type': int},
+            'inter_pulse_width': {'label': 'Inter-Pulse Width (µs)', 'range': (1, 1000), 'increment': 10,
+                                  'numeric_type': int},
+            'stim_duration': {'label': 'Stimulation Duration (s)', 'range': (1, 240), 'increment': 1,
+                              'numeric_type': float},
+            'channel': {'label': 'Channel', 'range': (1, 8), 'increment': 1, 'numeric_type': int},
+        }
+    )
+
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
             cls._instance = super(Settings, cls).__new__(cls, *args, **kwargs)
@@ -23,10 +37,11 @@ class Settings:
             cls._instance.stim_duration_s = 10
             cls._instance.channel_input = 1
 
+            # TODO add com port as a setting?
+
             # Initialize frequency_hz with the setter, so that the period gets logged
             cls._instance._frequency_hz = None
             cls._instance.frequency_hz = 10
-
 
         return cls._instance
 
