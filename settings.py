@@ -19,19 +19,17 @@ class Settings:
     # IMPORTANT: Make values for period match values for frequency and vice versa
     PARAMETER_OPTIONS = OrderedDict(
         {
-            'amplitude': {'label': 'Amplitude (mA)', 'range': (0.5, 15), 'increment': 0.5, 'numeric_type': float,
+            'channel': {'label': 'Channel', 'range': (1, 8), 'increment': 1, 'numeric_type': int, 'default': 1},
+            'amplitude': {'label': 'Amplitude (mA)', 'range': (0.5, 20), 'increment': 0.5, 'numeric_type': float,
                           'default': 2.0},
-            'frequency': {'label': 'Frequency (Hz)', 'range': (1, 100), 'increment': 1, 'numeric_type': float,
-                          'default': 10},
-            'period': {'label': 'Period (s)', 'range': (0.01, 1), 'increment': 0.01, 'numeric_type': float,
-                       'default': 0.1},
             'pulse_width': {'label': 'Pulse Width (µs)', 'range': (1, 1000), 'increment': 10, 'numeric_type': int,
                             'default': 100},
             'inter_pulse_width': {'label': 'Inter-Pulse Width (µs)', 'range': (1, 1000), 'increment': 10,
                                   'numeric_type': int, 'default': 200},
             'stim_duration': {'label': 'Stimulation Duration (s)', 'range': (1, 240), 'increment': 1,
                               'numeric_type': float, 'default': 10},
-            'channel': {'label': 'Channel', 'range': (1, 8), 'increment': 1, 'numeric_type': int, 'default': 1},
+            'frequency': {'label': 'Frequency (Hz)', 'range': (1, 100), 'increment': 1, 'numeric_type': float,
+                          'default': 10.0},
         }
     )
 
@@ -53,10 +51,9 @@ class Settings:
 
             # Create linked StringVars for period and frequency
             ci.frequency = tk.StringVar(value=str(po['frequency']['default']))
-            ci.period = tk.StringVar(value=str(po['period']['default']))
+            ci.period = tk.StringVar()
+            ci._update_period_from_frequency()
             ci.frequency.trace_add('write', ci._update_period_from_frequency)
-            ci.period.trace_add('write', ci._update_frequency_from_period)
-
 
         return cls._instance
 
@@ -65,21 +62,10 @@ class Settings:
         logging.debug('In _update_period_from_frequency')
         try:
             frequency = float(self.frequency.get())
-            period = 1 / frequency
-            self.period.set(str(period))
+            period = (1 / frequency) * 1000  # Convert to milliseconds
+            self.period.set(f"{period:.2f}")
         except ValueError:
             logging.error('Invalid frequency value')
-            raise ValueError
-
-    def _update_frequency_from_period(self, *_):
-        """Update the period based on the frequency."""
-        logging.debug('In _update_frequency_from_period')
-        try:
-            period = float(self.period.get())
-            frequency = 1 / period
-            self.frequency.set(str(frequency))
-        except ValueError:
-            logging.error('Invalid period value')
             raise ValueError
 
     @property

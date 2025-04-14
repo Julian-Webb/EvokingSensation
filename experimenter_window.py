@@ -102,6 +102,7 @@ class _ParameterManager(ttk.Frame):
         super().__init__(parent, borderwidth=2, relief="solid")
 
         # Create labels and spin boxes
+        row = 0  # So PyCharm doesn't complain about row possibly not being initialized below
         for row, parameter in enumerate(Settings.PARAMETER_OPTIONS):
             po = Settings.PARAMETER_OPTIONS[parameter]  # po = parameter options
 
@@ -120,6 +121,14 @@ class _ParameterManager(ttk.Frame):
                                   invalidcommand=invalid_cmd,
                                   textvariable=Settings().__getattribute__(parameter))
             spinbox.grid(row=row, column=1, padx=5, pady=5)
+
+        # Add field to display the period
+        row += 1
+        ttk.Separator(self, orient="horizontal").grid(row=row, column=0, columnspan=2, sticky="ew", pady=5)
+        period_label = ttk.Label(self, text="Period (ms)")
+        period_label.grid(row=row + 1, column=0, padx=5, pady=5, sticky="w")
+        period_field = ttk.Entry(self, textvariable=Settings().period, state='readonly')
+        period_field.grid(row=row + 1, column=1, padx=5, pady=5)
 
     @staticmethod
     def _on_invalid_input(parameter: str):

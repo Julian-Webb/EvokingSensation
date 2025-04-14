@@ -105,18 +105,18 @@ class Stimulator:
         self.ml_update.packet_number = sm.smpt_packet_number_generator_next(self.device)
         time.sleep(0.001)  # TODO can I remove this?
 
-    def rectangular_pulse(self, amplitude_mA, period_ms, pulse_width_us, inter_pulse_width_us, channel):
+    def rectangular_pulse(self, amplitude_ma, period_ms, pulse_width_us, inter_pulse_width_us, channel):
         """
         Configure a rectangular pulse for the specified channel.
         """
         self.ml_update.enable_channel[channel] = True
         self.ml_update.channel_config[channel].period = period_ms  # Period in ms
         self.ml_update.channel_config[channel].number_of_points = 3
-        self.ml_update.channel_config[channel].points[0].current = amplitude_mA
+        self.ml_update.channel_config[channel].points[0].current = amplitude_ma
         self.ml_update.channel_config[channel].points[0].time = pulse_width_us
         self.ml_update.channel_config[channel].points[1].current = 0
         self.ml_update.channel_config[channel].points[1].time = inter_pulse_width_us
-        self.ml_update.channel_config[channel].points[2].current = -amplitude_mA
+        self.ml_update.channel_config[channel].points[2].current = -amplitude_ma
         self.ml_update.channel_config[channel].points[2].time = pulse_width_us
 
     def stimulate_ml(self, stim_duration_s: float):
