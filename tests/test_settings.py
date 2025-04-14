@@ -10,13 +10,13 @@ class TestSettings(unittest.TestCase):
 
     def test_change_property(self):
         s = Settings()
-        s.amplitude_mA = 5
-        self.assertEqual(s.amplitude_mA, 5, "amplitude_mA should be 5")
+        s.amplitude = 5
+        self.assertEqual(s.amplitude, 5, "amplitude_mA should be 5")
 
     def test_period_from_frequency(self):
         s = Settings()
         freq = 5
-        s.frequency_hz = freq
+        s.frequency = freq
         period_ms = (1 / freq) * 1000
 
         self.assertEqual(s.period_ms, period_ms, f"period_ms should be {period_ms} ms based on frequency {freq} Hz")

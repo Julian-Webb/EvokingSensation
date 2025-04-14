@@ -1,7 +1,6 @@
-import logging
 import tkinter as tk
 from tkinter import ttk, messagebox
-from typing import Union, Tuple, Type
+from typing import Union
 
 from serial.tools import list_ports
 from settings import Settings
@@ -101,10 +100,8 @@ NUMERIC = Union[int, float]
 class _ParameterManager(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent, borderwidth=2, relief="solid")
-        # It's essential to keep a reference to the tk.StringVars to avoid garbage collection
-        self.string_vars = {}  # TODO replace with vars in Settings?
 
-        # Create labels and spinboxes
+        # Create labels and spin boxes
         for row, parameter in enumerate(Settings.PARAMETER_OPTIONS):
             po = Settings.PARAMETER_OPTIONS[parameter]  # po = parameter options
 
@@ -116,31 +113,28 @@ class _ParameterManager(ttk.Frame):
                 self.register(self._validate_input), "%P", po['range'][0], po['range'][1], po['numeric_type'])
 
             invalid_cmd = (self.register(self._on_invalid_input), parameter)
-
-            # TODO implement initial values
-            str_var = tk.StringVar(self, value='1')
-            self.string_vars[parameter] = str_var
-
             spinbox = ttk.Spinbox(self,
                                   from_=po['range'][0], to=po['range'][1], increment=po['increment'],
                                   validate='focusout',
                                   validatecommand=validation_cmd,
                                   invalidcommand=invalid_cmd,
-                                  textvariable=str_var)
+                                  textvariable=Settings().__getattribute__(parameter))
             spinbox.grid(row=row, column=1, padx=5, pady=5)
 
-    def _on_invalid_input(self, parameter: str):
+    @staticmethod
+    def _on_invalid_input(parameter: str):
         """Handle invalid input by resetting value."""
-        # TODO I need to somehow tell the user what the valid range is
-        messagebox.showerror("Invalid Input", f"Invalid input for {parameter}. Please enter a valid number.")
-        self.string_vars[parameter].set('1')  # Reset to default value
+        min_, max_ = Settings.PARAMETER_OPTIONS[parameter]['range']
+        messagebox.showerror("Invalid Input",
+                             f"Invalid input for {parameter}. Please enter a valid number between {min_} and {max_}.")
+
+        str_var = Settings().__getattribute__(parameter)
+        # Reset to default value
+        str_var.set(Settings.PARAMETER_OPTIONS[parameter]['default'])
 
     @staticmethod
     def _validate_input(input_str: str, minimum: str, maximum: str, numeric_type: str):
         """Validate the input value based on the specified numeric type."""
-        logging.debug(f'{numeric_type=}')
-        logging.debug(f'{type(numeric_type)=}')
-
         type_map = {"<class 'float'>": float, "<class 'int'>": int}
         numeric_class = type_map[numeric_type]
         try:
