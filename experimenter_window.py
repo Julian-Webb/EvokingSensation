@@ -15,11 +15,11 @@ class ExperimenterWindow(tk.Tk):
         self.title("Experimenter Window")
 
         # Create widgets
-        self.stimulation_buttons = _StimulationButtons(self, self.stimulator)
+        self.parameter_manager = _ParameterManager(self)
+        self.stimulation_buttons = _StimulationButtons(self, self.stimulator, self.parameter_manager.set_state)
         self.com_port_manager = _ComPortManager(self, self.stimulator,
                                                 on_successful_init=self.stimulation_buttons.enable_start,
                                                 on_close_port=self.stimulation_buttons.disable_buttons)
-        self.parameter_manager = _ParameterManager(self)
 
         for frame in (self.com_port_manager, self.parameter_manager, self.stimulation_buttons):
             frame.pack(padx=10, pady=10)
@@ -95,10 +95,11 @@ class _ComPortManager(ttk.Frame):
             messagebox.showerror("Serial Port Error", str(e))
 
 
-# TODO parameter manager should be deactived whilte stim is running
+# TODO parameter manager should be deactivated while stim is running
 class _ParameterManager(ttk.Frame):
     def __init__(self, master):
         super().__init__(master, borderwidth=2, relief="solid")
+        self.spinboxes = {}
 
         # Create labels and spin boxes
         row = 0  # So PyCharm doesn't complain about row possibly not being initialized below
@@ -120,6 +121,8 @@ class _ParameterManager(ttk.Frame):
                                   invalidcommand=invalid_cmd,
                                   textvariable=Settings().__getattribute__(parameter))
             spinbox.grid(row=row, column=1, padx=5, pady=5)
+
+            self.spinboxes[parameter] = spinbox
 
         # Add field to display the period
         row += 1
@@ -155,6 +158,14 @@ class _ParameterManager(ttk.Frame):
         # check if it's in range
         return float(minimum) <= number <= float(maximum)
 
+    def set_state(self, state: str):
+        """
+        Set the state of all child widgets in the frame.
+        :param state: 'normal' to enable, 'disabled' to disable.
+        """
+        for spinbox in self.spinboxes.values():
+            spinbox.config(state=state)
+
 
 class _Timer(ttk.Frame):
     """This class manages the timer for the stimulation duration."""
@@ -179,11 +190,12 @@ class _Timer(ttk.Frame):
 
 
 class _StimulationButtons(ttk.Frame):
-    """The buttons to start and stop the stimulation"""
-
-    def __init__(self, master, stimulator: Stimulator):
+    def __init__(self, master, stimulator: Stimulator, parameter_manager_set_state: callable(str)):
+        """The buttons to start and stop the stimulation
+        :param parameter_manager_set_state: A function to call to set the state of the parameter manager when stimulation starts or stops"""
         super().__init__(master, borderwidth=2, relief="solid")
         self.stimulator = stimulator
+        self.parameter_manager_set_state = parameter_manager_set_state
 
         self.start_button = ttk.Button(self,
                                        text="Start Stimulation",
@@ -225,18 +237,15 @@ class _StimulationButtons(ttk.Frame):
 
         self.start_button['state'] = 'disabled'
         self.stop_button['state'] = 'normal'
+        self.parameter_manager_set_state('disabled')
 
     def _on_stimulation_finish(self):
         """What to do when the stimulation finished naturally because the specified duration passed."""
         self.start_button['state'] = 'normal'
         self.stop_button['state'] = 'disabled'
-        # TODO reset configuration of stimulator
-
-
+        self.parameter_manager_set_state('normal')
 
     def _on_stop(self):
         """What to do when the stop button is pressed."""
         self.stimulator.stop_stimulation()
-        self.start_button['state'] = 'normal'
-        self.stop_button['state'] = 'disabled'
-        # TODO reset configuration of stimulator
+        self._on_stimulation_finish()
