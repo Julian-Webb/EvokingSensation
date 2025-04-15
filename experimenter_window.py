@@ -10,19 +10,32 @@ from stimulator import Stimulator, SerialPortError
 class ExperimenterWindow(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.stimulator = Stimulator(self)
-
         self.title("Experimenter Window")
+
+        # Define a custom style for the stop button
+        style = ttk.Style()
+        style.configure("EnabledStopButton.TButton", background="red", foreground="red")
+
+        self.stimulator = Stimulator(self)
 
         # Create widgets
         self.parameter_manager = _ParameterManager(self)
-        self.stimulation_buttons = _StimulationButtons(self, self.stimulator, self.parameter_manager.set_state)
+        self.stimulation_buttons = _StimulationButtons(self, self.stimulator, self.on_start_stimulation,
+                                                       self.on_stop_stimulation)
         self.com_port_manager = _ComPortManager(self, self.stimulator,
                                                 on_successful_init=self.stimulation_buttons.enable_start,
                                                 on_close_port=self.stimulation_buttons.disable_buttons)
 
         for frame in (self.com_port_manager, self.parameter_manager, self.stimulation_buttons):
             frame.pack(padx=10, pady=10)
+
+    def on_start_stimulation(self):
+        self.parameter_manager.set_state('disabled')
+        self.com_port_manager.close_button['state'] = 'disabled'
+
+    def on_stop_stimulation(self):
+        self.parameter_manager.set_state('enabled')
+        self.com_port_manager.close_button['state'] = 'normal'
 
 
 class _ComPortManager(ttk.Frame):
@@ -190,12 +203,15 @@ class _Timer(ttk.Frame):
 
 
 class _StimulationButtons(ttk.Frame):
-    def __init__(self, master, stimulator: Stimulator, parameter_manager_set_state: callable(str)):
+    def __init__(self, master, stimulator: Stimulator, on_start_callback: callable, on_stop_callback: callable, ):
         """The buttons to start and stop the stimulation
-        :param parameter_manager_set_state: A function to call to set the state of the parameter manager when stimulation starts or stops"""
+        :param on_start_callback: A function to call when stimulation was started successfully.
+        :param on_stop_callback: A function to call when stimulation was stopped successfully.
+        """
         super().__init__(master, borderwidth=2, relief="solid")
         self.stimulator = stimulator
-        self.parameter_manager_set_state = parameter_manager_set_state
+        self.on_start_callback = on_start_callback
+        self.on_stop_callback = on_stop_callback
 
         self.start_button = ttk.Button(self,
                                        text="Start Stimulation",
@@ -205,7 +221,7 @@ class _StimulationButtons(ttk.Frame):
         self.start_button.grid(row=0, column=0, padx=5, pady=5)
 
         self.stop_button = ttk.Button(self, text='Stop Stimulation', state='disabled',
-                                      command=self._on_stop)
+                                      command=self._on_manual_stop)
         self.stop_button.grid(row=0, column=1, padx=5, pady=5)
 
         self.timer = _Timer(self)
@@ -220,6 +236,7 @@ class _StimulationButtons(ttk.Frame):
         """Disabled the start and stop buttons (for when the port is closed)."""
         self.start_button['state'] = 'disabled'
         self.stop_button['state'] = 'disabled'
+
 
     def _on_start(self):
         s = Settings()
@@ -236,16 +253,16 @@ class _StimulationButtons(ttk.Frame):
         self.stimulator.stimulate_ml(duration, self._on_stimulation_finish)
 
         self.start_button['state'] = 'disabled'
-        self.stop_button['state'] = 'normal'
-        self.parameter_manager_set_state('disabled')
+        self.stop_button.config(state='normal', style='EnabledStopButton.TButton')
+        self.on_start_callback()
 
     def _on_stimulation_finish(self):
-        """What to do when the stimulation finished naturally because the specified duration passed."""
+        """What to always do when the stimulation finished."""
         self.start_button['state'] = 'normal'
-        self.stop_button['state'] = 'disabled'
-        self.parameter_manager_set_state('normal')
+        self.stop_button.config(state='disabled', style='TButton')
+        self.on_stop_callback()
 
-    def _on_stop(self):
+    def _on_manual_stop(self):
         """What to do when the stop button is pressed."""
         self.stimulator.stop_stimulation()
         self._on_stimulation_finish()

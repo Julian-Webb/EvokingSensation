@@ -126,8 +126,9 @@ class Stimulator:
 
     def _reset_pulse(self):
         """Rests the pulse configuration to remove the previous pulse"""
-        self.ml_update.enable_channel[self.active_channel] = False
-        self.active_channel = None
+        if self.active_channel is not None:
+            self.ml_update.enable_channel[self.active_channel] = False
+            self.active_channel = None
 
     def stimulate_ml(self, stim_duration_s: float, on_termination: callable):
         """
