@@ -230,6 +230,8 @@ class _StimulationButtons(ttk.Frame):
         """What to do when the stimulation finished naturally because the specified duration passed."""
         self.start_button['state'] = 'normal'
         self.stop_button['state'] = 'disabled'
+        # TODO reset configuration of stimulator
+
 
 
     def _on_stop(self):
@@ -237,3 +239,4 @@ class _StimulationButtons(ttk.Frame):
         self.stimulator.stop_stimulation()
         self.start_button['state'] = 'normal'
         self.stop_button['state'] = 'disabled'
+        # TODO reset configuration of stimulator
