@@ -27,7 +27,7 @@ class Settings:
             'inter_pulse_width': {'label': 'Inter-Pulse Width (µs)', 'range': (1, 1000), 'increment': 10,
                                   'numeric_type': int, 'default': 200},
             'stim_duration': {'label': 'Stimulation Duration (s)', 'range': (1, 240), 'increment': 1,
-                              'numeric_type': float, 'default': 10},
+                              'numeric_type': float, 'default': 3},
             'frequency': {'label': 'Frequency (Hz)', 'range': (1, 100), 'increment': 1, 'numeric_type': float,
                           'default': 10.0},
         }
@@ -59,14 +59,12 @@ class Settings:
 
     def _update_period_from_frequency(self, *_):
         """Update the period based on the frequency."""
-        logging.debug('In _update_period_from_frequency')
         try:
             frequency = float(self.frequency.get())
             period = (1 / frequency) * 1000  # Convert to milliseconds
             self.period.set(f"{period:.2f}")
-        except ValueError:
-            logging.error('Invalid frequency value')
-            raise ValueError
+        except (ValueError, ZeroDivisionError):
+            self.period.set('Invalid Frequency Value')
 
     @property
     def channel_adjusted(self):

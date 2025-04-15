@@ -11,7 +11,6 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     # -------------------------
 
-    stimulator = Stimulator()
-    experimenter_window = ExperimenterWindow(stimulator)
+    experimenter_window = ExperimenterWindow()
 
     experimenter_window.mainloop()

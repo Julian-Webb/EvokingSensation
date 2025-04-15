@@ -1,12 +1,15 @@
 import logging
+import time
+
 from stimulator import Stimulator
+import tkinter as tk
+from tkinter import ttk
 logging.basicConfig(level=logging.DEBUG)
 
 # --- Inputs ---
-# TODO check inputs for validity. Period must be larger that pulse duration. Amplitude must be in range. Maybe more.
-amplitude_mA: float = 65  # amplitude in mA
+amplitude_mA: float = 50.0  # amplitude in mA
 frequency_Hz = 10  # frequency in Hz
-pulse_width_us = 360  # pulse width in microseconds
+pulse_width_us = 100  # pulse width in microseconds
 # inter pulse width in microseconds: the time between the positive and negative phase of a pulse
 inter_pulse_width_us = 200
 stim_duration_s = 10  # stimulation duration in seconds
@@ -23,16 +26,28 @@ logging.info(f'Period {period_ms} ms has been derived from frequency {frequency_
 # --- Variables ---
 port = "COM5"
 
+# --- The script ---
+def stimulate():
+    stimulator.initialize(port)
+
+    # --- Pulse configuration ---
+    # Configure a rectangular pulse for the specified channel.
+    stimulator.rectangular_pulse(channel, amplitude_mA, pulse_width_us, inter_pulse_width_us, period_ms)
+
+    # --- Stimulate ---
+    stimulator.stimulate_ml(stim_duration_s)
+
+    # --- Finalization ---
+    time.sleep(stim_duration_s + 0.5)
+    stimulator.close_com_port()
+
 # --- Initialize device ---
-stimulator = Stimulator()
-stimulator.initialize(port)
+root = tk.Tk()
+root.geometry('200x100')
 
-# --- Pulse configuration ---
-# Configure a rectangular pulse for the specified channel.
-stimulator.rectangular_pulse(amplitude_mA, period_ms, pulse_width_us, inter_pulse_width_us, channel)
+stimulator = Stimulator(root)
+stim_button = ttk.Button(root, text='Stimulate',
+                         command=stimulate)
+stim_button.pack(expand=True, fill=tk.BOTH, padx=20, pady=20)
 
-# --- Stimulate ---
-stimulator.stimulate_ml(stim_duration_s)
-
-# --- Finalization ---
-stimulator.close_com_port()
+root.mainloop()
