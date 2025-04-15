@@ -12,7 +12,7 @@ frequency_Hz = 10  # frequency in Hz
 pulse_width_us = 100  # pulse width in microseconds
 # inter pulse width in microseconds: the time between the positive and negative phase of a pulse
 inter_pulse_width_us = 200
-stim_duration_s = 10  # stimulation duration in seconds
+stim_duration_s = 100  # stimulation duration in seconds
 
 # channel number (1-8). Refer to labels on device.
 # This number will be adjusted to 0-7 in the code because indexing starts at 0.
@@ -35,7 +35,7 @@ def stimulate():
     stimulator.rectangular_pulse(channel, amplitude_mA, pulse_width_us, inter_pulse_width_us, period_ms)
 
     # --- Stimulate ---
-    stimulator.stimulate_ml(stim_duration_s)
+    stimulator.stimulate_ml(stim_duration_s, lambda: None)
 
     # --- Finalization ---
     time.sleep(stim_duration_s + 0.5)

@@ -15,16 +15,13 @@ class ExperimenterWindow(tk.Tk):
         self.title("Experimenter Window")
 
         # Create widgets
-        self.create_widgets()
+        self.stimulation_buttons = _StimulationButtons(self, self.stimulator)
+        self.com_port_manager = _ComPortManager(self, self.stimulator,
+                                                on_successful_init=self.stimulation_buttons.enable_start,
+                                                on_close_port=self.stimulation_buttons.disable_buttons)
+        self.parameter_manager = _ParameterManager(self)
 
-    def create_widgets(self):
-        # Example label
-        stimulation_buttons = _StimulationButtons(self, self.stimulator)
-        com_port_manager = _ComPortManager(self, self.stimulator, on_successful_init=stimulation_buttons.enable_start,
-                                           on_close_port=stimulation_buttons.disable_buttons)
-        parameter_manager = _ParameterManager(self)
-
-        for frame in (com_port_manager, parameter_manager, stimulation_buttons):
+        for frame in (self.com_port_manager, self.parameter_manager, self.stimulation_buttons):
             frame.pack(padx=10, pady=10)
 
 
@@ -54,11 +51,11 @@ class _ComPortManager(ttk.Frame):
         self.refresh_button.pack(side="left", padx=5)
 
         # Open button
-        self.open_button = tk.Button(self, text="Open & Initialize", command=self.open_and_initialize)
+        self.open_button = tk.Button(self, text="Open", command=self.open_port)
         self.open_button.pack(side="left", padx=5)
 
         # Close button
-        self.close_button = tk.Button(self, text="Close", state="disabled", command=self.close)
+        self.close_button = tk.Button(self, text="Close", state="disabled", command=self.close_port)
         self.close_button.pack(side="left", padx=5)
 
     def _update_available_com_ports(self):
@@ -72,7 +69,7 @@ class _ComPortManager(ttk.Frame):
                 raise Exception("No COM ports available")
         return list_ports.comports()
 
-    def open_and_initialize(self):
+    def open_port(self):
         """Initialize the stimulator with the selected COM port, deactivate the Open button, activate the Close
         button, and call the function passed as on_successful_init at construction."""
         try:
@@ -85,7 +82,7 @@ class _ComPortManager(ttk.Frame):
         except SerialPortError as e:
             messagebox.showerror("Serial Port Error", str(e))
 
-    def close(self):
+    def close_port(self):
         """Close the stimulator, activate the Open button and deactivate the Close button"""
         try:
             self.stimulator.close_com_port()
@@ -233,9 +230,12 @@ class _StimulationButtons(ttk.Frame):
         """What to do when the stimulation finished naturally because the specified duration passed."""
         self.start_button['state'] = 'normal'
         self.stop_button['state'] = 'disabled'
+        # TODO reset configuration of stimulator
+
 
     def _on_stop(self):
         """What to do when the stop button is pressed."""
         self.stimulator.stop_stimulation()
         self.start_button['state'] = 'normal'
         self.stop_button['state'] = 'disabled'
+        # TODO reset configuration of stimulator

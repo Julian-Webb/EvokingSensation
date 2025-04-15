@@ -28,11 +28,20 @@ class Stimulator:
         self.extended_version_ack = sm.ffi.new("Smpt_get_extended_version_ack*")  # memory for device info
         self.ml_update = sm.ffi.new("Smpt_ml_update*")  # memory for mid-level (ML) stimulation update
         self.ml_get_current_data = sm.ffi.new("Smpt_ml_get_current_data*")  # memory for getting current data
+        self.ml_init = sm.ffi.new("Smpt_ml_init*")
 
         self.keep_stimulating = False
         # The callback identifier which calls the _stimulation_loop after a certain duration
         self.stim_loop_callback = None
         self.start_time = None  # Initialize start time for stimulation
+
+        # initialize Mid-level parameters
+        self.active_channel = None
+        # self.amplitude_ma = None
+        # self.pulse_width_us = None
+        # self.inter_pulse_width_us = None
+        # self.period_ms = None
+
 
     def initialize(self, com_port: str):
         """
@@ -44,8 +53,6 @@ class Stimulator:
         packet_number = self._open_com_port(com_port)
 
         self._log_version_info(packet_number)
-
-        self._initialize_ml()  # Initialize mid-level (ML) stimulation
 
     def _open_com_port(self, com_port: str):
         com = sm.ffi.new("char[]", com_port.encode("ascii"))
@@ -101,40 +108,41 @@ class Stimulator:
         logging.debug(f"fw_version: {fw_version.major}.{fw_version.minor}.{fw_version.revision}")
         logging.debug(f"smpt_version: {smpt_version.major}.{smpt_version.minor}.{smpt_version.revision}")
 
-    def _initialize_ml(self):
-        """
-        Initialize mid-level (ML) stimulation.
-        """
-        ml_init = sm.ffi.new("Smpt_ml_init*")
-        ml_init.packet_number = sm.smpt_packet_number_generator_next(self.device)
-        ret = sm.smpt_send_ml_init(self.device, ml_init)
-        logging.debug(f"smpt_send_ml_init: {ret}")
-        self.ml_update.packet_number = sm.smpt_packet_number_generator_next(self.device)
-        time.sleep(0.001)  # TODO can I remove this?
-
     def rectangular_pulse(self, channel: int, amplitude_ma: float, pulse_width_us: int, inter_pulse_width_us: int,
                           period_ms: float):
         """
-        Configure a rectangular pulse for the specified channel.
+        Configure a rectangular pulse for the specified channel using mid-level configuration.
         """
+        # save parameters
+        self.active_channel = channel
+
+        # configure
         self.ml_update.enable_channel[channel] = True
-        self.ml_update.channel_config[channel].period = period_ms  # Period in ms
-        self.ml_update.channel_config[channel].number_of_points = 3
-        self.ml_update.channel_config[channel].points[0].current = amplitude_ma
-        self.ml_update.channel_config[channel].points[0].time = pulse_width_us
-        self.ml_update.channel_config[channel].points[1].current = 0
-        self.ml_update.channel_config[channel].points[1].time = inter_pulse_width_us
-        self.ml_update.channel_config[channel].points[2].current = -amplitude_ma
-        self.ml_update.channel_config[channel].points[2].time = pulse_width_us
+
+        config = self.ml_update.channel_config[channel]
+        config.period = period_ms
+        config.number_of_points = 3
+        config.points[0].current = amplitude_ma
+        config.points[0].time = pulse_width_us
+        config.points[1].current = 0
+        config.points[1].time = inter_pulse_width_us
+        config.points[2].current = -amplitude_ma
+        config.points[2].time = pulse_width_us
+
+    def _reset_pulse(self):
+        """Rests the pulse configuration to remove the previous pulse"""
+        self.ml_update.enable_channel[self.active_channel] = False
+        self.active_channel = None
 
     def stimulate_ml(self, stim_duration_s: float, on_termination: callable):
         """
         Start mid-level (ML) stimulation, send an update once per second, and stop after the specified duration.
         :param stim_duration_s: How long the stimulation should go on for in seconds
-        # TODO will it really not be called?
         :param on_termination: The function to call when the stimulation terminates after the time runs out.
         This might not be called if the stimulation is terminated by other means.
         """
+        self._initialize_ml()  # Initialize mid-level (ML) stimulation
+
         self.start_time = time.perf_counter()
         ret = sm.smpt_send_ml_update(self.device, self.ml_update)  # This already starts the stimulation
 
@@ -151,11 +159,22 @@ class Stimulator:
 
         return self.start_time
 
+    def _initialize_ml(self):
+        """
+        Initialize mid-level (ML) stimulation.
+        """
+        # ml_init = sm.ffi.new("Smpt_ml_init*")
+        self.ml_init.packet_number = sm.smpt_packet_number_generator_next(self.device)
+        ret = sm.smpt_send_ml_init(self.device, self.ml_init)
+        logging.debug(f"smpt_send_ml_init: {ret}")
+        self.ml_update.packet_number = sm.smpt_packet_number_generator_next(self.device)
+        time.sleep(0.001)  # TODO can I remove this?
+
     def _stimulation_loop(self, stim_duration_s: float, on_termination: callable):
         """Sends an update once per second to keep the stimulation running and stops after the specified time.
         :return: elapsed time in seconds"""
-
         elapsed_time = time.perf_counter() - self.start_time
+
         if self.keep_stimulating:
             self.ml_get_current_data.data_selection = sm.Smpt_Ml_Data_Channels
             self.ml_get_current_data.packet_number = sm.smpt_packet_number_generator_next(self.device)
@@ -168,12 +187,12 @@ class Stimulator:
             # This is for precision as well as performance reasons: we can wait for the exact time, and we don't need to call
             # sm.smpt_send_ml_get_current_data that often.
             if elapsed_time < (stim_duration_s - 1.5):
-                self.stim_loop_callback = self.master.after(1000, self._stimulation_loop, stim_duration_s,
-                                                            on_termination)
+                callback_after_ms = 1000
             else:
                 self.keep_stimulating = False
-                remaining_time_ms = round((stim_duration_s - elapsed_time) * 1000)
-                self.master.after(remaining_time_ms, self._stimulation_loop, stim_duration_s, on_termination)
+                callback_after_ms = round((stim_duration_s - elapsed_time) * 1000)  # call back after the remaining time
+            self.stim_loop_callback = self.master.after(callback_after_ms, self._stimulation_loop, stim_duration_s,
+                                                        on_termination)
         else:
             # We should only reach this after the time has run out. Otherwise, log this error.
             if elapsed_time < stim_duration_s:
@@ -189,11 +208,8 @@ class Stimulator:
         :returns: whether stimulation was stopped successfully.
         """
         self.keep_stimulating = False
-
-        # Cancel .after to stop recursively calling _stimulation_loop
-        if self.stim_loop_callback is not None:
-            self.master.after_cancel(self.stim_loop_callback)
-            logging.info('Stimulation callback successfully canceled')
+        self._cancel_callback()
+        self._reset_pulse()
 
         packet_number = sm.smpt_packet_number_generator_next(self.device)
         ret = sm.smpt_send_ml_stop(self.device, packet_number)  # Stops the stimulation
@@ -209,15 +225,28 @@ class Stimulator:
         else:
             msg = "Failed to send stop signal to stimulator."
             logging.error(msg)
-            messagebox.showerror(msg)
+            messagebox.showerror(title='Stimulator Error', message=msg)
             raise StimulatorError(msg)
 
         return ret
+
+    def _cancel_callback(self):
+        """Cancel .after to stop recursively calling _stimulation_loop"""
+        if self.stim_loop_callback is not None:
+            self.master.after_cancel(self.stim_loop_callback)
+            logging.info(f'Called after_cancel for stimulation callback: {self.stim_loop_callback}')
+            self.stim_loop_callback = None
+
+
 
     def close_com_port(self):
         """
         Close the COM port.
         """
+        self.keep_stimulating = False
+        self._cancel_callback()
+        self._reset_pulse()
+
         ret = sm.smpt_close_serial_port(self.device)
         if ret:
             logging.info("Serial port has been closed successfully.")
@@ -225,3 +254,4 @@ class Stimulator:
             msg = "Failed to close the serial port."
             logging.error(msg)
             raise SerialPortError(msg)
+
