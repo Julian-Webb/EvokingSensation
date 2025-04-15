@@ -68,5 +68,5 @@ class Settings:
 
     @property
     def channel_adjusted(self):
-        """Adjusted channel number to 0-7 for indexing."""
-        return int(self.channel.get()) - 1  # Adjust channel number to 0-7 for indexing
+        """Adjusted channel number from 1-8 to 0-7 for indexing."""
+        return int(self.channel.get()) - 1

@@ -49,7 +49,7 @@ ll_config = sciencemode.ffi.new("Smpt_ll_channel_config*")
 stim_duration_s = 10  # stimulation duration in seconds
 
 ll_config.enable_stimulation = True
-ll_config.channel = sciencemode.Smpt_Channel_Red
+ll_config.active_channel = sciencemode.Smpt_Channel_Red
 ll_config.connector = sciencemode.Smpt_Connector_Yellow
 ll_config.number_of_points = 3
 ll_config.points[0].time = pulse_width_us
