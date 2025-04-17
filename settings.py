@@ -28,7 +28,7 @@ class Settings:
                                   'numeric_type': int, 'default': 200},
             'stim_duration': {'label': 'Stimulation Duration (s)', 'range': (1, 240), 'increment': 1,
                               'numeric_type': float, 'default': 3},
-            'frequency': {'label': 'Frequency (Hz)', 'range': (1, 100), 'increment': 1, 'numeric_type': float,
+            'frequency': {'label': 'Frequency (Hz)', 'range': (1, 100), 'increment': 1.0, 'numeric_type': float,
                           'default': 10.0},
         }
     )

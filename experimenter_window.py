@@ -1,4 +1,5 @@
 import logging
+import time
 import tkinter as tk
 from tkinter import ttk, messagebox
 
@@ -40,7 +41,7 @@ class ExperimenterWindow(tk.Tk):
 
 class _ComPortManager(ttk.Frame):
     def __init__(self, master, stimulator: Stimulator, on_successful_init: callable, on_close_port: callable):
-        """This class manages the COM port selection, opening and closing.
+        """This class manages the COM port selection, opening, and closing.
         :param on_successful_init: A function to call if the COM port is successfully opened and mid-level stimulation was initialized"""
         super().__init__(master, borderwidth=2, relief="solid")
         self.stimulator = stimulator
@@ -96,7 +97,7 @@ class _ComPortManager(ttk.Frame):
             messagebox.showerror("Serial Port Error", str(e))
 
     def close_port(self):
-        """Close the stimulator, activate the Open button and deactivate the Close button"""
+        """Close the stimulator, activate the Open button, and deactivate the Close button"""
         try:
             self.stimulator.close_com_port()
             self.port_selector.config(state='normal')
@@ -108,14 +109,13 @@ class _ComPortManager(ttk.Frame):
             messagebox.showerror("Serial Port Error", str(e))
 
 
-# TODO parameter manager should be deactivated while stim is running
 class _ParameterManager(ttk.Frame):
     def __init__(self, master):
         super().__init__(master, borderwidth=2, relief="solid")
         self.spinboxes = {}
 
         # Create labels and spin boxes
-        row = 0  # So PyCharm doesn't complain about row possibly not being initialized below
+        row = 0  # So PyCharm doesn't complain about the row possibly not being initialized below
         for row, parameter in enumerate(Settings.PARAMETER_OPTIONS):
             po = Settings.PARAMETER_OPTIONS[parameter]  # po = parameter options
 
@@ -137,7 +137,7 @@ class _ParameterManager(ttk.Frame):
 
             self.spinboxes[parameter] = spinbox
 
-        # Add field to display the period
+        # Add the field to display the period
         row += 1
         ttk.Separator(self, orient="horizontal").grid(row=row, column=0, columnspan=2, sticky="ew", pady=5)
         period_label = ttk.Label(self, text="Period (ms)")
@@ -162,7 +162,7 @@ class _ParameterManager(ttk.Frame):
         type_map = {"<class 'float'>": float, "<class 'int'>": int}
         numeric_class = type_map[numeric_type]
         try:
-            # Try converting to the appropriate type. E.g. if the numeric_class is float, this would be calling
+            # Try converting to the appropriate type. E.g., if the numeric_class is float, this would be calling
             # float(input_str)
             number = numeric_class(input_str)
         except ValueError:
@@ -174,32 +174,47 @@ class _ParameterManager(ttk.Frame):
     def set_state(self, state: str):
         """
         Set the state of all child widgets in the frame.
-        :param state: 'normal' to enable, 'disabled' to disable.
+        :param state: 'Normal' to enable, 'disabled' to disable.
         """
         for spinbox in self.spinboxes.values():
             spinbox.config(state=state)
 
 
+# noinspection PyTypeChecker
 class _Timer(ttk.Frame):
     """This class manages the timer for the stimulation duration."""
 
     def __init__(self, master):
         super().__init__(master, borderwidth=2, relief="solid")
+        self.start_time = None
+        self.keep_running = False  # Whether the timer should keep running
+
         self.timer_label = ttk.Label(self, text="Timer:")
         self.timer_label.pack(side="left", padx=5, pady=5)
 
         self.timer_var = tk.StringVar(self, value='00:00')
-        self.duration_label = ttk.Label(self,
-                                        textvariable=self.timer_var
-                                        )
+        self.duration_label = ttk.Label(self, textvariable=self.timer_var)
         self.duration_label.pack(side="left", padx=5, pady=5)
 
         self.unit_label = ttk.Label(self, text="s")
-        self.unit_label.pack(side='right')
+        self.unit_label.pack(side='right', padx=5, pady=5)
 
-    def set_timer(self, elapsed_time: float):
-        """:param elapsed_time: elapsed time in seconds"""
-        pass
+    def start_timer(self, start_time: float):
+        """Start the timer with the given start time."""
+        self.start_time = start_time
+        self.keep_running = True
+        self._update_timer()
+
+    def _update_timer(self):
+        """Update the timer display."""
+        if self.keep_running:
+            elapsed_time = time.perf_counter() - self.start_time
+            self.timer_var.set(f"{elapsed_time:.2f}")
+            self.after(10, self._update_timer)
+
+    def stop_timer(self):
+        """Stop the timer."""
+        self.keep_running = False
 
 
 class _StimulationButtons(ttk.Frame):
@@ -229,14 +244,12 @@ class _StimulationButtons(ttk.Frame):
 
     def enable_start(self):
         """Enable the start button"""
-        logging.debug('In enable_start')
         self.start_button['state'] = 'normal'
 
     def disable_buttons(self):
         """Disabled the start and stop buttons (for when the port is closed)."""
         self.start_button['state'] = 'disabled'
         self.stop_button['state'] = 'disabled'
-
 
     def _on_start(self):
         s = Settings()
@@ -250,7 +263,8 @@ class _StimulationButtons(ttk.Frame):
         period = float(s.period.get())
         self.stimulator.rectangular_pulse(channel, amplitude, pulse_width, inter_pulse_width, period)
 
-        self.stimulator.stimulate_ml(duration, self._on_stimulation_finish)
+        start_time = self.stimulator.stimulate_ml(duration, self._on_stimulation_finish, self._on_error)
+        self.timer.start_timer(start_time)
 
         self.start_button['state'] = 'disabled'
         self.stop_button.config(state='normal', style='EnabledStopButton.TButton')
@@ -258,6 +272,7 @@ class _StimulationButtons(ttk.Frame):
 
     def _on_stimulation_finish(self):
         """What to always do when the stimulation finished."""
+        self.timer.stop_timer()
         self.start_button['state'] = 'normal'
         self.stop_button.config(state='disabled', style='TButton')
         self.on_stop_callback()
@@ -266,3 +281,12 @@ class _StimulationButtons(ttk.Frame):
         """What to do when the stop button is pressed."""
         self.stimulator.stop_stimulation()
         self._on_stimulation_finish()
+
+    def _on_error(self, channel: int):
+        """What to do if the stimulator responds with an error."""
+        logging.debug('In _on_error')
+        self.stimulator.stop_stimulation()
+        self._on_stimulation_finish()
+        channel_adjusted = channel + 1  # Adjust the channel because of 0-indexing
+        messagebox.showerror(title="Stimulator Error.",
+                             message=f"The stimulator has reported an error on channel {channel_adjusted}. Stimulation stopped.")

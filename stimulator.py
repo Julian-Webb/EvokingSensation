@@ -26,9 +26,10 @@ class Stimulator:
         self.device = sm.ffi.new("Smpt_device*")  # memory for the device
         self.ack = sm.ffi.new("Smpt_ack*")  # memory for acknowledgment (responses)
         self.extended_version_ack = sm.ffi.new("Smpt_get_extended_version_ack*")  # memory for device info
+        self.ml_init = sm.ffi.new("Smpt_ml_init*")
         self.ml_update = sm.ffi.new("Smpt_ml_update*")  # memory for mid-level (ML) stimulation update
         self.ml_get_current_data = sm.ffi.new("Smpt_ml_get_current_data*")  # memory for getting current data
-        self.ml_init = sm.ffi.new("Smpt_ml_init*")
+        self.ml_get_current_data_ack = sm.ffi.new("Smpt_ml_get_current_data_ack*")
 
         self.keep_stimulating = False
         # The callback identifier which calls the _stimulation_loop after a certain duration
@@ -37,7 +38,6 @@ class Stimulator:
 
         # initialize Mid-level parameters
         self.active_channel = None
-
 
     def initialize(self, com_port: str):
         """
@@ -55,7 +55,6 @@ class Stimulator:
 
         # Check if the serial port is available
         ret = sm.smpt_check_serial_port(com)
-        logging.debug(f"Port check is {ret}")
         if not ret:
             msg = f"Failed to open the serial port {com_port}. \n(Port check is {ret})"
             logging.error(msg)
@@ -68,16 +67,15 @@ class Stimulator:
 
         # Generate the next packet number for communication (ensures synchronization with device)
         packet_number = sm.smpt_packet_number_generator_next(self.device)
-        logging.debug(f"next packet_number {packet_number}")  # Output the next packet number
+        # logging.debug(f"next packet_number {packet_number}") # Output the next packet number
         return packet_number
 
     def _log_version_info(self, packet_number):
         # Send a request to get extended version information from the device
-        ret = sm.smpt_send_get_extended_version(self.device, packet_number)
-        logging.debug(f"smpt_send_get_extended_version: {ret}")  # Output the result of sending the request
+        _ret = sm.smpt_send_get_extended_version(self.device, packet_number)
 
         # Wait for a response packet from the device
-        logging.debug("Waiting for device response.")
+        logging.debug("Waiting for device response...")
         start_time = time.time()
 
         while not sm.smpt_new_packet_received(self.device):
@@ -91,13 +89,13 @@ class Stimulator:
 
         # Get the last acknowledgment packet from the device
         sm.smpt_last_ack(self.device, self.ack)
-        logging.debug(
-            f"command number {self.ack.command_number}, packet_number {self.ack.packet_number}")  # Output command info
+
+        # Output command info
+        # logging.debug(f"command number {self.ack.command_number}, packet_number {self.ack.packet_number}")
 
         # Retrieve the extended version information from the device
-        ret = sm.smpt_get_get_extended_version_ack(self.device, self.extended_version_ack)
-        logging.debug(f"smpt_get_get_extended_version_ack: {ret}")
-        logging.debug(f"fw_hash: {self.extended_version_ack.fw_hash}")  # Output the firmware hash
+        _ret = sm.smpt_get_get_extended_version_ack(self.device, self.extended_version_ack)
+        # logging.debug(f"fw_hash: {self.extended_version_ack.fw_hash}") # Output the firmware hash
 
         fw_version = self.extended_version_ack.uc_version.fw_version
         smpt_version = self.extended_version_ack.uc_version.smpt_version
@@ -130,16 +128,20 @@ class Stimulator:
             self.ml_update.enable_channel[self.active_channel] = False
             self.active_channel = None
 
-    def stimulate_ml(self, stim_duration_s: float, on_termination: callable):
+    def stimulate_ml(self, stim_duration_s: float, on_termination: callable, on_error: callable):
         """
         Start mid-level (ML) stimulation, send an update once per second, and stop after the specified duration.
         :param stim_duration_s: How long the stimulation should go on for in seconds
         :param on_termination: The function to call when the stimulation terminates after the time runs out.
         This might not be called if the stimulation is terminated by other means.
+        :param on_error: A function to be executed if the stimulator says there's an error.
+        :return: The start time of the stimulation.
         """
+        logging.info('--- Stimulation ---')
         self._initialize_ml()  # Initialize mid-level (ML) stimulation
 
         self.start_time = time.perf_counter()
+        self.ml_update.packet_number = sm.smpt_packet_number_generator_next(self.device)
         ret = sm.smpt_send_ml_update(self.device, self.ml_update)  # This already starts the stimulation
 
         if ret:
@@ -151,23 +153,20 @@ class Stimulator:
             raise StimulatorError(msg)
 
         # Let it loop but don't block the main thread
-        self._stimulation_loop(stim_duration_s, on_termination)
+        self._stimulation_loop(stim_duration_s, on_termination, on_error)
 
         return self.start_time
 
     def _initialize_ml(self):
-        """
-        Initialize mid-level (ML) stimulation.
-        """
+        """Initialize mid-level (ML) stimulation."""
         self.ml_init.packet_number = sm.smpt_packet_number_generator_next(self.device)
         ret = sm.smpt_send_ml_init(self.device, self.ml_init)
         logging.debug(f"smpt_send_ml_init: {ret}")
-        self.ml_update.packet_number = sm.smpt_packet_number_generator_next(self.device)
         # time.sleep(0.001)
 
-    def _stimulation_loop(self, stim_duration_s: float, on_termination: callable):
+    def _stimulation_loop(self, stim_duration_s: float, on_termination: callable, on_error: callable):
         """Sends an update once per second to keep the stimulation running and stops after the specified time.
-        :return: elapsed time in seconds"""
+        :return: Elapsed time in seconds"""
         elapsed_time = time.perf_counter() - self.start_time
 
         if self.keep_stimulating:
@@ -177,17 +176,20 @@ class Stimulator:
             ret = sm.smpt_send_ml_get_current_data(self.device, self.ml_get_current_data)
             logging.debug(f"smpt_send_ml_get_current_data: {ret}")
 
-            # If we have more than 1.5s left of stimulation, we wait for 1s
+            # Check for errors asynchronously
+            self.master.after(0, self._check_for_error, on_error)
+
+            # If we have more than 1.5 s left of stimulation, we wait for 1 s
             # Otherwise, we break out of the loop and wait for the remaining time
-            # This is for precision as well as performance reasons: we can wait for the exact time, and we don't need to call
-            # sm.smpt_send_ml_get_current_data that often.
+            # This is for precision as well as performance reasons: we can wait for the exact time, and we don't need to
+            # call sm.smpt_send_ml_get_current_data that often.
             if elapsed_time < (stim_duration_s - 1.5):
                 callback_after_ms = 1000
             else:
                 self.keep_stimulating = False
                 callback_after_ms = round((stim_duration_s - elapsed_time) * 1000)  # call back after the remaining time
             self.stim_loop_callback = self.master.after(callback_after_ms, self._stimulation_loop, stim_duration_s,
-                                                        on_termination)
+                                                        on_termination, on_error)
         else:
             # We should only reach this after the time has run out. Otherwise, log this error.
             if elapsed_time < stim_duration_s:
@@ -197,13 +199,44 @@ class Stimulator:
             on_termination()
         return elapsed_time
 
+    def _check_for_error(self, on_error: callable):
+        """Checks is the device is reporting an issue during stimulation."""
+        # This code is copied and adapted from the notebook P24_ml_eight_channels.ipynb from the ScienceMode
+        # python wrapper.
+        self.ml_get_current_data_ack.packet_number = sm.smpt_packet_number_generator_next(self.device)
+        while sm.smpt_new_packet_received(self.device):
+            # Clear up the acknowledgment structure
+            sm.smpt_clear_ack(self.ack)
+            sm.smpt_last_ack(self.device, self.ack)
+
+            # Check whether this packet is the acknowledgement for the ml_get_current_data command
+            if self.ack.command_number != sm.Smpt_Cmd_Ml_Get_Current_Data_Ack:
+                continue
+
+            # Get the acknowledgement (response)
+            ret = sm.smpt_get_ml_get_current_data_ack(self.device, self.ml_get_current_data_ack)
+            if not ret:
+                logging.debug(
+                    f"Couldn't get the ml_get_current_data acknowledgement. (smpt_get_ml_get_current_data_ack: {ret})")
+
+            # Check for an error
+            error_on_channel = self.ml_get_current_data_ack.channel_data.channel_state[self.active_channel]
+            if bool(error_on_channel):
+                logging.error(f"There's an error on channel {self.active_channel}.")
+                on_error(self.active_channel)
+                break
+
     def stop_stimulation(self):
         """
         Stop stimulation.
-        :returns: whether stimulation was stopped successfully.
+        :returns: Whether stimulation was stopped successfully.
         """
         self.keep_stimulating = False
-        self._cancel_callback()
+        # Cancel the callback to _stimulation_loop
+        if self.stim_loop_callback is not None:
+            self.master.after_cancel(self.stim_loop_callback)
+            logging.info(f'Called after_cancel for stimulation callback: {self.stim_loop_callback}')
+            self.stim_loop_callback = None
         self._reset_pulse()
 
         packet_number = sm.smpt_packet_number_generator_next(self.device)
@@ -225,21 +258,8 @@ class Stimulator:
 
         return ret
 
-    def _cancel_callback(self):
-        """Cancel .after to stop recursively calling _stimulation_loop"""
-        if self.stim_loop_callback is not None:
-            self.master.after_cancel(self.stim_loop_callback)
-            logging.info(f'Called after_cancel for stimulation callback: {self.stim_loop_callback}')
-            self.stim_loop_callback = None
-
     def close_com_port(self):
-        """
-        Close the COM port.
-        """
-        self.keep_stimulating = False
-        self._cancel_callback()
-        self._reset_pulse()
-
+        """Close the COM port."""
         ret = sm.smpt_close_serial_port(self.device)
         if ret:
             logging.info("Serial port has been closed successfully.")
@@ -247,4 +267,3 @@ class Stimulator:
             msg = "Failed to close the serial port."
             logging.error(msg)
             raise SerialPortError(msg)
-
