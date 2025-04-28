@@ -34,9 +34,9 @@ class Stimulator:
         self.keep_stimulating = False
         # The callback identifier which calls the _stimulation_loop after a certain duration
         self.stim_loop_callback = None
-        self.start_time = None  # Initialize start time for stimulation
-
-        # initialize Mid-level parameters
+        # The callback identifier which calls _check_for_error after a certain duration
+        self.check_error_callback = None
+        self.start_time = None  #  start time of stimulation
         self.active_channel = None
 
     def initialize(self, com_port: str):
@@ -102,7 +102,7 @@ class Stimulator:
         logging.debug(f"fw_version: {fw_version.major}.{fw_version.minor}.{fw_version.revision}")
         logging.debug(f"smpt_version: {smpt_version.major}.{smpt_version.minor}.{smpt_version.revision}")
 
-    def rectangular_pulse(self, channel: int, amplitude_ma: float, pulse_width_us: int, inter_pulse_width_us: int,
+    def rectangular_pulse(self, channel: int, amplitude_ma: float, phase_duration: int, interpulse_interval: int,
                           period_ms: float):
         """
         Configure a rectangular pulse for the specified channel using mid-level configuration.
@@ -116,11 +116,11 @@ class Stimulator:
         config.period = period_ms
         config.number_of_points = 3
         config.points[0].current = amplitude_ma
-        config.points[0].time = pulse_width_us
+        config.points[0].time = phase_duration
         config.points[1].current = 0
-        config.points[1].time = inter_pulse_width_us
+        config.points[1].time = interpulse_interval
         config.points[2].current = -amplitude_ma
-        config.points[2].time = pulse_width_us
+        config.points[2].time = phase_duration
 
     def _reset_pulse(self):
         """Rests the pulse configuration to remove the previous pulse"""
@@ -174,10 +174,14 @@ class Stimulator:
             self.ml_get_current_data.packet_number = sm.smpt_packet_number_generator_next(self.device)
             # We have to call this at least every 2s to keep the stimulation going
             ret = sm.smpt_send_ml_get_current_data(self.device, self.ml_get_current_data)
-            logging.debug(f"smpt_send_ml_get_current_data: {ret}")
+            if ret:
+                logging.debug(f"ML update sent. Elapsed time: {elapsed_time:.5f} s")
+            else:
+                logging.error(f"smpt_send_ml_get_current_data returned {ret}")
 
             # Check for errors asynchronously
-            self.master.after(0, self._check_for_error, on_error)
+            # 150 ms seems to give it enough time to receive a response consistently
+            self.check_error_callback = self.master.after(150, self._check_for_error, on_error)
 
             # If we have more than 1.5 s left of stimulation, we wait for 1 s
             # Otherwise, we break out of the loop and wait for the remaining time
@@ -222,8 +226,9 @@ class Stimulator:
             # Check for an error
             error_on_channel = self.ml_get_current_data_ack.channel_data.channel_state[self.active_channel]
             if bool(error_on_channel):
-                logging.error(f"There's an error on channel {self.active_channel}.")
-                on_error(self.active_channel)
+                channel_input = self.active_channel + 1 # adjust for 0-indexing
+                logging.error(f"There's an error on channel {channel_input}.")
+                on_error(channel_input)
                 break
 
     def stop_stimulation(self):
@@ -232,11 +237,15 @@ class Stimulator:
         :returns: Whether stimulation was stopped successfully.
         """
         self.keep_stimulating = False
-        # Cancel the callback to _stimulation_loop
+        # Cancel the callback to _stimulation_loop and _check_for_error
         if self.stim_loop_callback is not None:
             self.master.after_cancel(self.stim_loop_callback)
             logging.info(f'Called after_cancel for stimulation callback: {self.stim_loop_callback}')
             self.stim_loop_callback = None
+        if self.check_error_callback is not None:
+            self.master.after_cancel(self.check_error_callback)
+            logging.info(f'Called after_cancel for check_error_callback: {self.check_error_callback}')
+            self.check_error_callback = None
         self._reset_pulse()
 
         packet_number = sm.smpt_packet_number_generator_next(self.device)

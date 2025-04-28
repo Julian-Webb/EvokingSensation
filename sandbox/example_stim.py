@@ -9,9 +9,9 @@ logging.basicConfig(level=logging.DEBUG)
 # --- Inputs ---
 amplitude_mA: float = 50.0  # amplitude in mA
 frequency_Hz = 10  # frequency in Hz
-pulse_width_us = 100  # pulse width in microseconds
+phase_duration = 100  # pulse width in microseconds
 # inter pulse width in microseconds: the time between the positive and negative phase of a pulse
-inter_pulse_width_us = 200
+interphase_interval = 200
 stim_duration_s = 100  # stimulation duration in seconds
 
 # channel number (1-8). Refer to labels on device.
@@ -32,7 +32,7 @@ def stimulate():
 
     # --- Pulse configuration ---
     # Configure a rectangular pulse for the specified channel.
-    stimulator.rectangular_pulse(channel, amplitude_mA, pulse_width_us, inter_pulse_width_us, period_ms)
+    stimulator.rectangular_pulse(channel, amplitude_mA, phase_duration, interphase_interval, period_ms)
 
     # --- Stimulate ---
     stimulator.stimulate_ml(stim_duration_s, lambda: None)

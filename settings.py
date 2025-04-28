@@ -9,10 +9,10 @@ class Settings:
     Attributes:
         amplitude (float): The tk.StringVar for amplitude in milli ampere.
         frequency (float): The tk.StringVar for frequency in Hz.
-        pulse_width (int): The tk.StringVar for pulse width in microseconds.
-        inter_pulse_width (int): The tk.StringVar for time between the positive and negative phase of a pulse in microseconds.
+        phase_duration (int): The tk.StringVar for phase duration in microseconds.
+        interphase_interval (int): The tk.StringVar for time between the positive and negative phase of a pulse in microseconds.
         stim_duration (float): The tk.StringVar for stimulation duration in seconds.
-        channel (int): The tk.StringVar for channel number (1-8). Refer to labels on device.
+        channel (int): The tk.StringVar for channel number (1-8). Refer to labels on the device.
     """
     _instance = None
 
@@ -22,14 +22,14 @@ class Settings:
             'channel': {'label': 'Channel', 'range': (1, 8), 'increment': 1, 'numeric_type': int, 'default': 1},
             'amplitude': {'label': 'Amplitude (mA)', 'range': (0.5, 20), 'increment': 0.5, 'numeric_type': float,
                           'default': 2.0},
-            'pulse_width': {'label': 'Pulse Width (µs)', 'range': (1, 1000), 'increment': 10, 'numeric_type': int,
-                            'default': 100},
-            'inter_pulse_width': {'label': 'Inter-Pulse Width (µs)', 'range': (1, 1000), 'increment': 10,
-                                  'numeric_type': int, 'default': 200},
+            'phase_duration': {'label': 'Phase duration (µs)', 'range': (1, 1000), 'increment': 50, 'numeric_type': int,
+                            'default': 700},
+            'interphase_interval': {'label': 'Interphase interval (µs)', 'range': (1, 1000), 'increment': 50,
+                                  'numeric_type': int, 'default': 500},
             'stim_duration': {'label': 'Stimulation Duration (s)', 'range': (1, 240), 'increment': 1,
-                              'numeric_type': float, 'default': 3},
-            'frequency': {'label': 'Frequency (Hz)', 'range': (1, 100), 'increment': 1.0, 'numeric_type': float,
-                          'default': 10.0},
+                              'numeric_type': float, 'default': 5},
+            'frequency': {'label': 'Frequency (Hz)', 'range': (1, 1000), 'increment': 1.0, 'numeric_type': float,
+                          'default': 50.0},
         }
     )
 
@@ -44,8 +44,8 @@ class Settings:
             # Initialize StringVars for each parameter with default values
             # It's essential to keep a reference to the tk.StringVars to avoid garbage collection!
             ci.amplitude = tk.StringVar(value=str(po['amplitude']['default']))
-            ci.pulse_width = tk.StringVar(value=str(po['pulse_width']['default']))
-            ci.inter_pulse_width = tk.StringVar(value=str(po['inter_pulse_width']['default']))
+            ci.phase_duration = tk.StringVar(value=str(po['phase_duration']['default']))
+            ci.interphase_interval = tk.StringVar(value=str(po['interphase_interval']['default']))
             ci.stim_duration = tk.StringVar(value=str(po['stim_duration']['default']))
             ci.channel = tk.StringVar(value=str(po['channel']['default']))
 

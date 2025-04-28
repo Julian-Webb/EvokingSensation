@@ -65,7 +65,7 @@ time.sleep(1)
 # Update mid-level (ML) stimulation configuration
 max_current_mA = 5
 pulse_width_us = 1000  # in micro-seconds
-inter_pulse_width_us = 2000  # in micro-seconds
+interphase_interval = 2000  # in micro-seconds
 period_ms = 20  # in milliseconds
 stim_duration_s = 5  # stimulation duration in seconds
 # Duration of a point (~pulse width) can be between 0 and 4095 microseconds
@@ -104,7 +104,7 @@ ml_update.channel_config[channel].number_of_points = 3
 ml_update.channel_config[channel].points[0].current = max_current_mA
 ml_update.channel_config[channel].points[0].time = pulse_width_us
 ml_update.channel_config[channel].points[1].current = 0
-ml_update.channel_config[channel].points[1].time = inter_pulse_width_us
+ml_update.channel_config[channel].points[1].time = interphase_interval
 ml_update.channel_config[channel].points[2].current = -max_current_mA
 ml_update.channel_config[channel].points[2].time = pulse_width_us
 

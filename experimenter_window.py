@@ -258,10 +258,10 @@ class _StimulationButtons(ttk.Frame):
         # update the pulse configuration
         channel = s.channel_adjusted
         amplitude = float(s.amplitude.get())
-        pulse_width = int(s.pulse_width.get())
-        inter_pulse_width = int(s.inter_pulse_width.get())
+        phase_duration = int(s.phase_duration.get())
+        interpulse_interval = int(s.interpulse_interval.get())
         period = float(s.period.get())
-        self.stimulator.rectangular_pulse(channel, amplitude, pulse_width, inter_pulse_width, period)
+        self.stimulator.rectangular_pulse(channel, amplitude, phase_duration, interpulse_interval, period)
 
         start_time = self.stimulator.stimulate_ml(duration, self._on_stimulation_finish, self._on_error)
         self.timer.start_timer(start_time)
@@ -287,6 +287,5 @@ class _StimulationButtons(ttk.Frame):
         logging.debug('In _on_error')
         self.stimulator.stop_stimulation()
         self._on_stimulation_finish()
-        channel_adjusted = channel + 1  # Adjust the channel because of 0-indexing
         messagebox.showerror(title="Stimulator Error.",
-                             message=f"The stimulator has reported an error on channel {channel_adjusted}. Stimulation stopped.")
+                             message=f"The stimulator has reported an error on channel {channel}. Stimulation stopped.")
