@@ -60,32 +60,26 @@ class ExperimenterWindow(tk.Tk):
         self.com_port_manager.close_button['state'] = 'normal'
 
     def on_start_stimulation(self):
-        # disabled starting experiment
-        self.experiment_buttons.disable_start()
-
+        self.experiment_buttons.disable_start()  # disable starting experiment
         self.on_start_any()
 
     def on_stop_stimulation(self):
-        # enable starting experiment
-        self.experiment_buttons.enable_start()
-
+        self.experiment_buttons.enable_start()  # enable starting experiment
         self.on_stop_any()
 
     def on_start_experiment(self):
-        # disable starting stimulation
-        self.stimulation_buttons.disable_buttons()
-
+        self.stimulation_buttons.disable_buttons()  # disable starting stimulation
         self.on_start_any()
-        # Participant window
+
+        # open the participant window
         self.participant_window = ParticipantWindow(self, self.stimulator)
 
     def on_stop_experiment(self):
-        # enable starting stimulation
-        self.stimulation_buttons.enable_start()
-
+        self.stimulation_buttons.enable_start()  # enable starting stimulation
         self.on_stop_any()
         # todo more here?
-        self.participant_window.destroy()
+        self.participant_window.destroy() # close the participant window
+        self.participant_window = None
 
 
 class _ComPortManager(ttk.Frame):
@@ -304,7 +298,7 @@ class _StimulationButtons(ttk.Frame):
     def _on_start(self):
         s = Settings()
         # We convert the duration before configuring the stimulator in case there's an error.
-        duration = float(Settings().stim_duration.get())
+        duration = float(s.stim_duration.get())
 
         # update the pulse configuration
         self.stimulator.rectangular_pulse(s.channel_adjusted, float(s.amplitude.get()), int(s.phase_duration.get()),
@@ -344,11 +338,14 @@ class _ExperimentButtons(ttk.Frame):
         self.on_start_experiment = on_start_experiment
         self.on_stop_experiment = on_stop_experiment
 
+        self.title = ttk.Label(self, text="Experiment", font='bold')
+
         self.start_exp_button = ttk.Button(self, text='Start Experiment', state='disabled', command=self.on_start)
         self.stop_exp_button = ttk.Button(self, text='Stop Experiment', state='disabled', command=self.on_stop)
 
-        self.start_exp_button.grid(row=0, column=0, padx=5, pady=5)
-        self.stop_exp_button.grid(row=0, column=1, padx=5, pady=5)
+        self.title.grid(row=0, column=0, columnspan=2, padx=5, pady=5)
+        self.start_exp_button.grid(row=1, column=0, padx=5, pady=5)
+        self.stop_exp_button.grid(row=1, column=1, padx=5, pady=5)
 
     def enable_start(self):
         self.start_exp_button['state'] = 'normal'

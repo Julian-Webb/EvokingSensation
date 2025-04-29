@@ -1,8 +1,9 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from typing import Callable
 
-from stimulator import Stimulator
+from settings import Settings
+from stimulator import Stimulator, StimulatorError
 
 _COUNTDOWN_DURATION = 3  # in seconds
 
@@ -14,6 +15,11 @@ class ParticipantWindow(tk.Toplevel):
 
         self.title('Participant View')
         self._initialize_window_position()
+
+        # disabled closing the window
+        self.protocol("WM_DELETE_WINDOW",
+                      lambda: messagebox.showinfo("Not closable",
+                                                  "This window must be closed in the experimenter view"))
 
         self.current_frame = _CalibrationPhase(self, stimulator, self.start_sense_phase)
         self.current_frame.pack()
@@ -106,8 +112,20 @@ class _CalibrationPhase(ttk.Frame):
         countdown_frame.start_countdown()
 
     def stimulate(self):
+        s = Settings()
+        # update the pulse configuration
+        self.stimulator.rectangular_pulse(s.channel_adjusted, float(s.amplitude.get()), int(s.phase_duration.get()),
+                                          int(s.interphase_interval.get()), float(s.period.get()))
+        self.stimulator.stimulate_ml(float(s.stim_duration.get()), self.on_stimulation_finish,
+                                     self.on_stimulation_error)
         self.show_frame(_StimulationFrame(self))
-        self.after(2000, self.query_intensity)  # todo actual stimulation here
+
+    def on_stimulation_finish(self):
+        self.query_intensity()
+
+    def on_stimulation_error(self):
+        messagebox.showerror('Stimulator error', 'The stimulator signaled an error.')
+        raise StimulatorError('The stimulator signaled an error.')
 
     def query_intensity(self):
         self.show_frame(self.InputIntensityFrame(self, on_continue=self.start_countdown))
@@ -116,15 +134,22 @@ class _CalibrationPhase(ttk.Frame):
         def __init__(self, master: tk.Widget, on_continue: Callable):
             super().__init__(master)
 
-            title = ttk.Label(self, text='Intensity Feedback')
-            title.pack()
+            self.intensity_var = tk.StringVar(self)
+
+            title = ttk.Label(self, text='Intensity Feedback', font='bold')
+            title.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
             # radio buttons for intensity
             intensity_label = ttk.Label(self, text='Sensation Intensity:')
-            intensity_label.pack()
+            intensity_label.grid(row=1, column=0, padx=5, pady=5, sticky="w")
+
+            for idx, intensity in enumerate(
+                    ['Nothing', 'Very weak', 'Weak', 'Moderate', 'Strong', 'Very strong', 'Painful']):
+                button = ttk.Radiobutton(self, text=intensity, variable=self.intensity_var, value=intensity)
+                button.grid(row=1, column=idx + 1, padx=5, pady=5)
 
             continue_button = ttk.Button(self, text='▶️ Continue Stimulation', command=on_continue)
-            continue_button.pack()
+            continue_button.grid(row=2, column=0, padx=5, pady=5)
 
     class PhaseCompleted(ttk.Frame):
         def __init__(self, master, next_phase: Callable):
