@@ -2,8 +2,11 @@ import logging
 import time
 import tkinter as tk
 from tkinter import ttk, messagebox
+from typing import Callable
 
 from serial.tools import list_ports
+
+from participant_window import ParticipantWindow
 from settings import Settings
 from stimulator import Stimulator, SerialPortError
 
@@ -11,7 +14,10 @@ from stimulator import Stimulator, SerialPortError
 class ExperimenterWindow(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Experimenter Window")
+        self.title("Experimenter View")
+        self.resizable(False, False)
+
+        self.participant_window = None
 
         # Define a custom style for the stop button
         style = ttk.Style()
@@ -20,23 +26,66 @@ class ExperimenterWindow(tk.Tk):
         self.stimulator = Stimulator(self)
 
         # Create widgets
-        self.parameter_manager = _ParameterManager(self)
         self.stimulation_buttons = _StimulationButtons(self, self.stimulator, self.on_start_stimulation,
                                                        self.on_stop_stimulation)
+        self.parameter_manager = _ParameterManager(self)
         self.com_port_manager = _ComPortManager(self, self.stimulator,
-                                                on_successful_init=self.stimulation_buttons.enable_start,
-                                                on_close_port=self.stimulation_buttons.disable_buttons)
+                                                on_successful_init=self.on_port_opened,
+                                                on_close_port=self.on_port_closed)
 
-        for frame in (self.com_port_manager, self.parameter_manager, self.stimulation_buttons):
+        self.experiment_buttons = _ExperimentButtons(self, self.on_start_experiment, self.on_stop_experiment)
+
+        for frame in (self.com_port_manager, self.stimulation_buttons, self.parameter_manager,
+                      self.experiment_buttons,):
             frame.pack(padx=10, pady=10)
 
-    def on_start_stimulation(self):
+    def on_port_opened(self):
+        """What to do when the port is successfully opened."""
+        self.stimulation_buttons.enable_start()
+        self.experiment_buttons.enable_start()
+
+    def on_port_closed(self):
+        """What to do when the port is closed."""
+        self.stimulation_buttons.disable_buttons()
+        self.experiment_buttons.disable_start()
+
+    def on_start_any(self):
+        """What to do when stimulation or experiment is started"""
         self.parameter_manager.set_state('disabled')
         self.com_port_manager.close_button['state'] = 'disabled'
 
-    def on_stop_stimulation(self):
+    def on_stop_any(self):
+        """What to do when stimulation or experiment is stopped"""
         self.parameter_manager.set_state('enabled')
         self.com_port_manager.close_button['state'] = 'normal'
+
+    def on_start_stimulation(self):
+        # disabled starting experiment
+        self.experiment_buttons.disable_start()
+
+        self.on_start_any()
+
+    def on_stop_stimulation(self):
+        # enable starting experiment
+        self.experiment_buttons.enable_start()
+
+        self.on_stop_any()
+
+    def on_start_experiment(self):
+        # disable starting stimulation
+        self.stimulation_buttons.disable_buttons()
+
+        self.on_start_any()
+        # Participant window
+        self.participant_window = ParticipantWindow(self, self.stimulator)
+
+    def on_stop_experiment(self):
+        # enable starting stimulation
+        self.stimulation_buttons.enable_start()
+
+        self.on_stop_any()
+        # todo more here?
+        self.participant_window.destroy()
 
 
 class _ComPortManager(ttk.Frame):
@@ -228,19 +277,18 @@ class _StimulationButtons(ttk.Frame):
         self.on_start_callback = on_start_callback
         self.on_stop_callback = on_stop_callback
 
-        self.start_button = ttk.Button(self,
-                                       text="Start Stimulation",
-                                       state='disabled',
-                                       command=self._on_start)
+        self.title = ttk.Label(self, text="Test Stimulation", font='bold')
+        self.title.grid(row=0, column=0, columnspan=2, padx=5, pady=5)
 
-        self.start_button.grid(row=0, column=0, padx=5, pady=5)
+        self.start_button = ttk.Button(self, text="Start Stimulation", state='disabled', command=self._on_start)
 
-        self.stop_button = ttk.Button(self, text='Stop Stimulation', state='disabled',
-                                      command=self._on_manual_stop)
-        self.stop_button.grid(row=0, column=1, padx=5, pady=5)
+        self.start_button.grid(row=1, column=0, padx=5, pady=5)
+
+        self.stop_button = ttk.Button(self, text='Stop Stimulation', state='disabled', command=self._on_manual_stop)
+        self.stop_button.grid(row=1, column=1, padx=5, pady=5)
 
         self.timer = _Timer(self)
-        self.timer.grid(row=1, column=0, columnspan=2, padx=5, pady=5)
+        self.timer.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
 
     def enable_start(self):
         """Enable the start button"""
@@ -249,19 +297,18 @@ class _StimulationButtons(ttk.Frame):
     def disable_buttons(self):
         """Disabled the start and stop buttons (for when the port is closed)."""
         self.start_button['state'] = 'disabled'
+        # todo maybe I can remove the next line this since the button should be disabled anyway if the stimulation
+        #  isn't running and then the port can't be closed
         self.stop_button['state'] = 'disabled'
 
     def _on_start(self):
         s = Settings()
+        # We convert the duration before configuring the stimulator in case there's an error.
         duration = float(Settings().stim_duration.get())
 
         # update the pulse configuration
-        channel = s.channel_adjusted
-        amplitude = float(s.amplitude.get())
-        phase_duration = int(s.phase_duration.get())
-        interpulse_interval = int(s.interpulse_interval.get())
-        period = float(s.period.get())
-        self.stimulator.rectangular_pulse(channel, amplitude, phase_duration, interpulse_interval, period)
+        self.stimulator.rectangular_pulse(s.channel_adjusted, float(s.amplitude.get()), int(s.phase_duration.get()),
+                                          int(s.interphase_interval.get()), float(s.period.get()))
 
         start_time = self.stimulator.stimulate_ml(duration, self._on_stimulation_finish, self._on_error)
         self.timer.start_timer(start_time)
@@ -289,3 +336,32 @@ class _StimulationButtons(ttk.Frame):
         self._on_stimulation_finish()
         messagebox.showerror(title="Stimulator Error.",
                              message=f"The stimulator has reported an error on channel {channel}. Stimulation stopped.")
+
+
+class _ExperimentButtons(ttk.Frame):
+    def __init__(self, master, on_start_experiment: Callable, on_stop_experiment: Callable):
+        super().__init__(master, borderwidth=2, relief="solid")
+        self.on_start_experiment = on_start_experiment
+        self.on_stop_experiment = on_stop_experiment
+
+        self.start_exp_button = ttk.Button(self, text='Start Experiment', state='disabled', command=self.on_start)
+        self.stop_exp_button = ttk.Button(self, text='Stop Experiment', state='disabled', command=self.on_stop)
+
+        self.start_exp_button.grid(row=0, column=0, padx=5, pady=5)
+        self.stop_exp_button.grid(row=0, column=1, padx=5, pady=5)
+
+    def enable_start(self):
+        self.start_exp_button['state'] = 'normal'
+
+    def disable_start(self):
+        self.start_exp_button['state'] = 'disabled'
+
+    def on_start(self):
+        self.on_start_experiment()
+        self.start_exp_button['state'] = 'disabled'
+        self.stop_exp_button.config(state='normal', style='EnabledStopButton.TButton')
+
+    def on_stop(self):
+        self.on_stop_experiment()
+        self.start_exp_button['state'] = 'normal'
+        self.stop_exp_button.config(state='disabled', style='TButton')

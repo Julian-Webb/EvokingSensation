@@ -19,7 +19,7 @@ class Settings:
     # IMPORTANT: Make values for period match values for frequency and vice versa
     PARAMETER_OPTIONS = OrderedDict(
         {
-            'channel': {'label': 'Channel', 'range': (1, 8), 'increment': 1, 'numeric_type': int, 'default': 1},
+            'channel': {'label': 'Channel (testing only)', 'range': (1, 8), 'increment': 1, 'numeric_type': int, 'default': 1},
             'amplitude': {'label': 'Amplitude (mA)', 'range': (0.5, 20), 'increment': 0.5, 'numeric_type': float,
                           'default': 2.0},
             'phase_duration': {'label': 'Phase duration (µs)', 'range': (1, 1000), 'increment': 50, 'numeric_type': int,
