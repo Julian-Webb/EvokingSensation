@@ -8,12 +8,17 @@ from serial.tools import list_ports
 
 from participant_window import ParticipantWindow
 from settings import Settings
+from stimulation_order import StimulationOrder
 from stimulator import Stimulator, SerialPortError
 
 
 class ExperimenterWindow(tk.Tk):
     def __init__(self):
         super().__init__()
+
+        # TODO stim order handling
+        self.stim_order = StimulationOrder.from_file('C:\\Users\\julia\\PycharmProjects\\EvokingSensation\\data\\test_stim_order.xlsx')
+
         self.title("Experimenter View")
         self.resizable(False, False)
 
@@ -38,6 +43,9 @@ class ExperimenterWindow(tk.Tk):
         for frame in (self.com_port_manager, self.stimulation_buttons, self.parameter_manager,
                       self.experiment_buttons,):
             frame.pack(padx=10, pady=10)
+
+        self.com_port_manager.open_port()  # todo delete after testing
+        self.on_start_experiment()  # todo delete after testing
 
     def on_port_opened(self):
         """What to do when the port is successfully opened."""
@@ -72,13 +80,14 @@ class ExperimenterWindow(tk.Tk):
         self.on_start_any()
 
         # open the participant window
-        self.participant_window = ParticipantWindow(self, self.stimulator)
+        self.participant_window = ParticipantWindow(self, self.stimulator, self.stim_order)
 
     def on_stop_experiment(self):
         self.stimulation_buttons.enable_start()  # enable starting stimulation
         self.on_stop_any()
         # todo more here?
-        self.participant_window.destroy() # close the participant window
+        # todo stop stimulation
+        self.participant_window.destroy()  # close the participant window
         self.participant_window = None
 
 
@@ -185,7 +194,7 @@ class _ParameterManager(ttk.Frame):
         ttk.Separator(self, orient="horizontal").grid(row=row, column=0, columnspan=2, sticky="ew", pady=5)
         period_label = ttk.Label(self, text="Period (ms)")
         period_label.grid(row=row + 1, column=0, padx=5, pady=5, sticky="w")
-        period_field = ttk.Label(self, textvariable=Settings().period)
+        period_field = ttk.Label(self, textvariable=Settings().period_string_var)
         period_field.grid(row=row + 1, column=1, padx=5, pady=5)
 
     @staticmethod
@@ -297,14 +306,12 @@ class _StimulationButtons(ttk.Frame):
 
     def _on_start(self):
         s = Settings()
-        # We convert the duration before configuring the stimulator in case there's an error.
-        duration = float(s.stim_duration.get())
 
         # update the pulse configuration
-        self.stimulator.rectangular_pulse(s.channel_adjusted, float(s.amplitude.get()), int(s.phase_duration.get()),
-                                          int(s.interphase_interval.get()), float(s.period.get()))
+        self.stimulator.rectangular_pulse(s.channel.get(), s.amplitude.get(), s.phase_duration.get(),
+                                          s.interphase_interval.get(), s.period_numeric())
 
-        start_time = self.stimulator.stimulate_ml(duration, self._on_stimulation_finish, self._on_error)
+        start_time = self.stimulator.stimulate_ml(s.stim_duration.get(), self._on_stimulation_finish, self._on_error)
         self.timer.start_timer(start_time)
 
         self.start_button['state'] = 'disabled'

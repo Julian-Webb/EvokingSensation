@@ -2,6 +2,7 @@ import logging
 import time
 import tkinter as tk
 from tkinter import messagebox
+from typing import Callable
 
 from sciencemode import sciencemode as sm
 
@@ -36,8 +37,12 @@ class Stimulator:
         self.stim_loop_callback = None
         # The callback identifier which calls _check_for_error after a certain duration
         self.check_error_callback = None
-        self.start_time = None  #  start time of stimulation
-        self.active_channel = None
+        self.start_time = None  # start time of stimulation
+        self._active_channels_adjusted = set()  # The active channels (adjusted for 0-indexing)
+
+    def active_channels(self):
+        """Get a set of the currently active channels as depicted on the stimulator."""
+        return {x + 1 for x in self._active_channels_adjusted}  # adjust for 1-indexing
 
     def initialize(self, com_port: str):
         """
@@ -106,13 +111,26 @@ class Stimulator:
                           period_ms: float):
         """
         Configure a rectangular pulse for the specified channel using mid-level configuration.
+        The pulse consists of three stages: a positive amplitude phase,
+        an interpulse interval (zero amplitude), and a negative amplitude phase.
+        This pulse is configured on the specified channel with specified timing
+        and amplitude settings.
+
+        :param channel: The channel number as depicted on the stimulator (1-8)
+        :param amplitude_ma: Amplitude value in milliamps for the positive and negative phases.
+        :param phase_duration: Duration in milliseconds for the positive and negative phases.
+        :param interpulse_interval: Duration in milliseconds of the zero-current phase between the positive and
+            negative phases.
+        :param period_ms: Total period of the rectangular pulse in milliseconds.
+        :return: None
         """
-        self.active_channel = channel
+        channel_adjusted = channel - 1  # adjust channel for 0-indexing
+        self._active_channels_adjusted.add(channel_adjusted)
 
         # configure
-        self.ml_update.enable_channel[channel] = True
+        self.ml_update.enable_channel[channel_adjusted] = True
 
-        config = self.ml_update.channel_config[channel]
+        config = self.ml_update.channel_config[channel_adjusted]
         config.period = period_ms
         config.number_of_points = 3
         config.points[0].current = amplitude_ma
@@ -122,13 +140,13 @@ class Stimulator:
         config.points[2].current = -amplitude_ma
         config.points[2].time = phase_duration
 
-    def _reset_pulse(self):
-        """Rests the pulse configuration to remove the previous pulse"""
-        if self.active_channel is not None:
-            self.ml_update.enable_channel[self.active_channel] = False
-            self.active_channel = None
+    def _reset_pulse_configs(self):
+        """Rests the pulse configurations to remove the previously specified pulses"""
+        for channel in self._active_channels_adjusted:
+            self.ml_update.enable_channel[channel] = False
+        self._active_channels_adjusted.clear()
 
-    def stimulate_ml(self, stim_duration_s: float, on_termination: callable, on_error: callable):
+    def stimulate_ml(self, stim_duration_s: float, on_termination: Callable[[], None], on_error: Callable[[int], None]):
         """
         Start mid-level (ML) stimulation, send an update once per second, and stop after the specified duration.
         :param stim_duration_s: How long the stimulation should go on for in seconds
@@ -139,6 +157,8 @@ class Stimulator:
         """
         logging.info('--- Stimulation ---')
         self._initialize_ml()  # Initialize mid-level (ML) stimulation
+
+        logging.info(f'Stimulating on channels {self.active_channels()}')
 
         self.start_time = time.perf_counter()
         self.ml_update.packet_number = sm.smpt_packet_number_generator_next(self.device)
@@ -164,7 +184,8 @@ class Stimulator:
         logging.debug(f"smpt_send_ml_init: {ret}")
         # time.sleep(0.001)
 
-    def _stimulation_loop(self, stim_duration_s: float, on_termination: callable, on_error: callable):
+    def _stimulation_loop(self, stim_duration_s: float, on_termination: Callable[[], None],
+                          on_error: Callable[[int], None]):
         """Sends an update once per second to keep the stimulation running and stops after the specified time.
         :return: Elapsed time in seconds"""
         elapsed_time = time.perf_counter() - self.start_time
@@ -203,10 +224,11 @@ class Stimulator:
             on_termination()
         return elapsed_time
 
-    def _check_for_error(self, on_error: callable):
+    def _check_for_error(self, on_error: Callable[[int], None]):
         """Checks is the device is reporting an issue during stimulation."""
         # This code is copied and adapted from the notebook P24_ml_eight_channels.ipynb from the ScienceMode
         # python wrapper.
+        # TODO adjust this whole function for multiple channels (check example notebook)
         self.ml_get_current_data_ack.packet_number = sm.smpt_packet_number_generator_next(self.device)
         while sm.smpt_new_packet_received(self.device):
             # Clear up the acknowledgment structure
@@ -223,13 +245,18 @@ class Stimulator:
                 logging.debug(
                     f"Couldn't get the ml_get_current_data acknowledgement. (smpt_get_ml_get_current_data_ack: {ret})")
 
-            # Check for an error
-            error_on_channel = self.ml_get_current_data_ack.channel_data.channel_state[self.active_channel]
-            if bool(error_on_channel):
-                channel_input = self.active_channel + 1 # adjust for 0-indexing
-                logging.error(f"There's an error on channel {channel_input}.")
-                on_error(channel_input)
-                break
+            # Check for an error on all active channels
+            # TODO this hasn't been tested yet
+            for channel_adj in self._active_channels_adjusted:
+                error_on_channel = self.ml_get_current_data_ack.channel_data.channel_state[channel_adj]
+                if bool(error_on_channel):
+                    channel_input = channel_adj + 1  # adjust for 0-indexing
+                    logging.error(f"There's an error on channel {channel_input}.")
+                    on_error(channel_input)
+                else:
+                    # todo this else can be deleted later
+                    channel_input = channel_adj + 1
+                    logging.debug(f"No error on channel {channel_input}.")
 
     def stop_stimulation(self):
         """
@@ -240,13 +267,13 @@ class Stimulator:
         # Cancel the callback to _stimulation_loop and _check_for_error
         if self.stim_loop_callback is not None:
             self.master.after_cancel(self.stim_loop_callback)
-            logging.info(f'Called after_cancel for stimulation callback: {self.stim_loop_callback}')
+            logging.debug(f'Called after_cancel for stimulation callback: {self.stim_loop_callback}')
             self.stim_loop_callback = None
         if self.check_error_callback is not None:
             self.master.after_cancel(self.check_error_callback)
-            logging.info(f'Called after_cancel for check_error_callback: {self.check_error_callback}')
+            logging.debug(f'Called after_cancel for check_error_callback: {self.check_error_callback}')
             self.check_error_callback = None
-        self._reset_pulse()
+        self._reset_pulse_configs()
 
         packet_number = sm.smpt_packet_number_generator_next(self.device)
         ret = sm.smpt_send_ml_stop(self.device, packet_number)  # Stops the stimulation
@@ -256,8 +283,8 @@ class Stimulator:
             if self.start_time is not None:
                 msg += f' Stimulation time: {time.perf_counter() - self.start_time:.5f} s'
             else:
-                logging.debug('No start time recorded. Probably because stimulation was not started. '
-                              'This piece of code should not be reached.')
+                logging.warning('No start time recorded. Probably because stimulation was not started. '
+                                'This piece of code should not be reached.')
             logging.info(msg)
         else:
             msg = "Failed to send stop signal to stimulator."
