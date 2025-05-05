@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -6,10 +7,10 @@ from typing import Callable
 
 from serial.tools import list_ports
 
-from participant_window import ParticipantWindow
-from settings import Settings
-from stimulation_order import StimulationOrder
-from stimulator import Stimulator, SerialPortError
+from frames.participant_window import ParticipantWindow
+from backend.settings import Settings
+from backend.stimulation_order import StimulationOrder
+from backend.stimulator import Stimulator, SerialPortError
 
 
 class ExperimenterWindow(tk.Tk):
@@ -17,7 +18,8 @@ class ExperimenterWindow(tk.Tk):
         super().__init__()
 
         # TODO stim order handling
-        self.stim_order = StimulationOrder.from_file('C:\\Users\\julia\\PycharmProjects\\EvokingSensation\\data\\test_stim_order.xlsx')
+        print(os.getcwd())
+        self.stim_order = StimulationOrder.from_file('data\\test_stim_order.xlsx')
 
         self.title("Experimenter View")
         self.resizable(False, False)

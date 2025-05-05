@@ -4,9 +4,9 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from typing import Callable
 
-from settings import Settings
-from stimulation_order import StimulationOrder
-from stimulator import Stimulator, StimulatorError
+from backend.settings import Settings
+from backend.stimulation_order import StimulationOrder
+from backend.stimulator import Stimulator, StimulatorError
 
 # _COUNTDOWN_DURATION = 3 # in seconds
 _COUNTDOWN_DURATION = 1  # in seconds # todo back to 3

@@ -1,5 +1,5 @@
 import logging
-from experimenter_window import ExperimenterWindow
+from frames.experimenter_window import ExperimenterWindow
 from utils import windows_dpi_awareness
 
 if __name__ == '__main__':

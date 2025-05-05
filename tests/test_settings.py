@@ -1,5 +1,5 @@
 import unittest
-from settings import Settings
+from backend.settings import Settings
 import tkinter as tk
 
 
