@@ -241,8 +241,7 @@ class _SensoryResponsePhase(ttk.Frame):
     def stimulate(self):
         s = Settings()
         # update the pulse configuration
-        trial_info = self.stim_order.current_trial()
-        for channel in trial_info['channels']:
+        for channel in self.stim_order.current_trial()['channels']:
             self.stimulator.rectangular_pulse(channel, s.amplitude.get(), s.phase_duration.get(),
                                               s.interphase_interval.get(), s.period_numeric())
         self.stimulator.stimulate_ml(s.stim_duration.get(), self.query_sensation, self.on_stimulation_error)
@@ -257,13 +256,29 @@ class _SensoryResponsePhase(ttk.Frame):
 
     def query_sensation(self):
         # todo adjust trial number
-        self.show_frame(self.EvokedSensationsFrame(self, on_continue=self.on_continue_stimulation,
+        self.show_frame(self.EvokedSensationsFrame(self, on_continue=self.on_continue_after_querying,
                                                    trial_number=self.stim_order.current_trial()['trial']))
 
-    def on_continue_stimulation(self):
+    def on_continue_after_querying(self):
         """What to do after querying is finished and the participant presses continue stimulation."""
-        self.stim_order.next_trial()
-        self.start_countdown()
+        old_block = self.stim_order.current_trial()['block']
+        new_trial_info = self.stim_order.next_trial()
+        if new_trial_info is None:
+            # End of Experiment
+            self.on_end_of_experiment()
+        elif old_block != new_trial_info['block']:
+            # End of block
+            self.on_end_of_block()
+        else:
+            # Regular trial
+            self.start_countdown()
+
+    def on_end_of_block(self):
+        self.show_frame(self.BlockCompleted(self, self.start_countdown))
+
+    def on_end_of_experiment(self):
+        self.show_frame(self.ExperimentCompleted(self))
+
 
     class EvokedSensationsFrame(ttk.Frame):
         # todo make this scrollable
@@ -359,7 +374,7 @@ class _SensoryResponsePhase(ttk.Frame):
                 type_frame.pack(fill='x', expand=True, padx=5, pady=5)
 
     class BlockCompleted(ttk.Frame):
-        def __init__(self, master, on_continue: Callable):
+        def __init__(self, master, on_continue: Callable[[], None]):
             super().__init__(master)
             # todo add logic for blocks; last block should show end of experiment
             title = ttk.Label(self, text='Block Completed! Time for a 5 minute break!')
@@ -367,3 +382,9 @@ class _SensoryResponsePhase(ttk.Frame):
 
             continue_button = ttk.Button(self, text='Continue with next block', command=on_continue)
             continue_button.pack()
+
+    class ExperimentCompleted(ttk.Frame):
+        def __init__(self, master):
+            super().__init__(master)
+            title = ttk.Label(self, text='Experiment Completed!\nThank you for participating!')
+            title.pack()

@@ -267,11 +267,11 @@ class Stimulator:
         # Cancel the callback to _stimulation_loop and _check_for_error
         if self.stim_loop_callback is not None:
             self.master.after_cancel(self.stim_loop_callback)
-            logging.debug(f'Called after_cancel for stimulation callback: {self.stim_loop_callback}')
+            # logging.debug(f'Called after_cancel for stimulation callback: {self.stim_loop_callback}')
             self.stim_loop_callback = None
         if self.check_error_callback is not None:
             self.master.after_cancel(self.check_error_callback)
-            logging.debug(f'Called after_cancel for check_error_callback: {self.check_error_callback}')
+            # logging.debug(f'Called after_cancel for check_error_callback: {self.check_error_callback}')
             self.check_error_callback = None
         self._reset_pulse_configs()
 

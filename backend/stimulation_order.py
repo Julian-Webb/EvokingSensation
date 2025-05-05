@@ -1,4 +1,5 @@
 import ast
+import logging
 import random
 import pandas as pd
 import numpy as np
@@ -16,7 +17,7 @@ class StimulationOrder:
         self.channel_electrode_map = None
 
         # The index for the overall trial (compared to the trial within a block)
-        self.overall_trial = 0
+        self.overall_trial = 1
 
         # example channel mapping TODO delete later
         self.channel_electrode_map = {1: (1, 2), 2: (3, 4), 3: (5, 6), 4: (7, 8), 5: (9, 10), 6: (11, 12), 7: (13, 14),
@@ -24,7 +25,7 @@ class StimulationOrder:
 
     @classmethod
     def from_file(cls, path: str):
-        """Create a StimulationOrder instance from an xlsx file.
+        """Create a StimulationOrder instance from an Excel (xlsx) file.
         :param path: File path"""
         instance = cls()
         # read the stimulation order (so)
@@ -50,7 +51,7 @@ class StimulationOrder:
         n_trials = 8
 
         blocks = []
-        for block in range(n_blocks):
+        for block in range(1, n_blocks + 1):
             trials = []
             for trial in range(n_trials):
                 n_channels_in_trial = random.randint(1, 8)
@@ -62,10 +63,12 @@ class StimulationOrder:
 
         return blocks
 
+    # for some reason it says that trial['block'] is invalid, so we turn off inspection
+    # noinspection PyTypeChecker
     def current_trial(self):
         """Provides information on the current trial.
         :return: A dict with the block and trial numbers, channels, and electrodes for the current trial."""
-        trial = dict(self.stim_order.iloc[self.overall_trial])
+        trial = dict(self.stim_order.loc[self.overall_trial])
         # convert block and trial from np.int64 to int
         trial['block'] = int(trial['block'])
         trial['trial'] = int(trial['trial'])
@@ -73,10 +76,17 @@ class StimulationOrder:
 
     def next_trial(self):
         """Advance to the next trial.
-        :return: A dict with the block and trial numbers as well as the channels for the new trial."""
+        :return: A dict with the block and trial numbers as well as the channels for the new trial if there is one, else None"""
         # todo handle end of experiment and block
-        self.overall_trial += 1
-        return self.current_trial()
+        # Go to the next trial unless this is the last one.
+        if self.overall_trial < len(self.stim_order):
+            self.overall_trial += 1
+            current_trial = self.current_trial()
+            logging.debug(f"New trial. Block: {current_trial['block']}, trial: {current_trial['trial']}")
+            return current_trial
+        else:
+            logging.debug("End of experiment.")
+            return None
 
     def reset_block(self):
         """Reset to the first trial of the current block.
@@ -137,4 +147,3 @@ class StimulationOrder:
             return ['background-color: {}'.format(color1 if x['block'] % 2 == 0 else color2) for _ in range(len(x))]
 
         return dataframe.style.apply(color_alternate, axis=1)
-
