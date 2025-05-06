@@ -1,5 +1,5 @@
 import unittest
-import experimenter_window
+from frames import experimenter_window
 
 
 class TestExperimenterWindow(unittest.TestCase):

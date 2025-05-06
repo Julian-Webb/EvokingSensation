@@ -1,17 +1,20 @@
+import os
 from collections import OrderedDict
 import tkinter as tk
 
-
+# We ignore unresolved references because we initialize properties with setattr, and it doesn't understand this.
+# noinspection PyUnresolvedReferences
 class Settings:
-    """Singleton Settings for the stimulation application.
+    """singleton Settings for the stimulation application.
 
     Attributes:
-        amplitude (float): The tk.DoubleVar for amplitude in milli ampere.
-        frequency (float): The tk.DoubleVar for frequency in Hz.
-        phase_duration (int): The tk.IntVar for phase duration in microseconds.
-        interphase_interval (int): The tk.IntVar for time between the positive and negative phase of a pulse in microseconds.
-        stim_duration (float): The tk.DoubleVar for stimulation duration in seconds.
-        channel (int): The tk.IntVar for channel number (1-8). Refer to labels on the device.
+        participant_data_dir: The tk.StringVar which stores the base directory for the participant data.
+        amplitude: The tk.DoubleVar for amplitude in milli ampere.
+        frequency: The tk.DoubleVar for frequency in Hz.
+        phase_duration: The tk.IntVar for phase duration in microseconds.
+        interphase_interval: The tk.IntVar for time between the positive and negative phase of a pulse in microseconds.
+        stim_duration: The tk.DoubleVar for stimulation duration in seconds.
+        channel: The tk.IntVar for channel number (1-8). refer to labels on the device.
     """
     _instance = None
 
@@ -38,26 +41,32 @@ class Settings:
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
             cls._instance = super(Settings, cls).__new__(cls, *args, **kwargs)
+            ci = cls._instance # alias for readability
 
-            # aliases for readability
-            ci = cls._instance
-            po = cls.PARAMETER_OPTIONS
+            # Variable for the path
+            # todo handling for actual path
+            ci.participant_data_dir = tk.StringVar(value=os.path.join(os.getcwd(), 'data', 'test_participant'))
 
-            # Initialize Vars for each parameter with default values
-            # It's essential to keep a reference to the tk.StringVars to avoid garbage collection!
-            ci.amplitude = tk.DoubleVar(value=po['amplitude']['default'])
-            ci.phase_duration = tk.IntVar(value=po['phase_duration']['default'])
-            ci.interphase_interval = tk.IntVar(value=po['interphase_interval']['default'])
-            ci.stim_duration = tk.DoubleVar(value=po['stim_duration']['default'])
-            ci.channel = tk.IntVar(value=po['channel']['default'])
+            # Initialize tk.IntVars / tk.DoubleVars for all parameters corresponding to their type
+            for property_name, options in cls.PARAMETER_OPTIONS.items():
+                numeric_class = tk.DoubleVar if options['numeric_type'] is float else tk.IntVar
+                var = numeric_class(value=options['default'])
+                setattr(ci, property_name, var)
 
-            # Create linked DoubleVars for period and frequency
-            ci.frequency = tk.DoubleVar(value=po['frequency']['default'])
+            # Link a period variable to the frequency
             ci.period_string_var = tk.StringVar()
             ci._update_period_from_frequency()
             ci.frequency.trace_add('write', ci._update_period_from_frequency)
 
         return cls._instance
+
+    def get_stim_order_path(self):
+        """The path for the stimulation order file."""
+        return os.path.join(self.participant_data_dir.get(), 'stimulation_order.xlsx')
+
+    def get_sensation_data_path(self):
+        """The path for the file storing the sensation data the participant entered."""
+        return os.path.join(self.participant_data_dir.get(), 'sensation_data.pkl')
 
     def _update_period_from_frequency(self, *_):
         """Update the period based on the frequency."""

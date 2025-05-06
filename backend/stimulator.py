@@ -253,10 +253,10 @@ class Stimulator:
                     channel_input = channel_adj + 1  # adjust for 0-indexing
                     logging.error(f"There's an error on channel {channel_input}.")
                     on_error(channel_input)
-                else:
-                    # todo this else can be deleted later
-                    channel_input = channel_adj + 1
-                    logging.debug(f"No error on channel {channel_input}.")
+                # else:
+                #     # todo this else can be deleted later
+                #     channel_input = channel_adj + 1
+                #     logging.debug(f"No error on channel {channel_input}.")
 
     def stop_stimulation(self):
         """
