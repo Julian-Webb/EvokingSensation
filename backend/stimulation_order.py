@@ -1,6 +1,8 @@
 import ast
 import logging
 import random
+from typing import Optional
+
 import pandas as pd
 import numpy as np
 
@@ -10,14 +12,14 @@ class StimulationOrder:
         """This class takes care of creating and storing the order of stimulation regarding blocks, trials, channels,
         and electrode pairs."""
         # The nested list with the order. The levels are blocks > trials > channels.
-        self.stim_order = None
+        self.stim_order: Optional[pd.DataFrame] = None
 
         # The mapping of channels to electrodes. It should contain an entry for each channel (1-8) with a
         # tuple containing the electrodes (1-16)
-        self.channel_electrode_map = None
+        self.channel_electrode_map: Optional[dict] = None
 
         # The index for the overall trial (compared to the trial within a block)
-        self.overall_trial = 1
+        self.overall_trial: int = 1
 
         # example channel mapping TODO delete later
         self.channel_electrode_map = {1: (1, 2), 2: (3, 4), 3: (5, 6), 4: (7, 8), 5: (9, 10), 6: (11, 12), 7: (13, 14),
@@ -39,29 +41,28 @@ class StimulationOrder:
         return instance
 
     @classmethod
-    def generate_new(cls):
+    def generate_new(cls, n_blocks: int = 4, n_trials_per_block: int = 8):
         """Create a StimulationOrder instance by generating a new stimulation order."""
-        # todo delete or implement
-        pass
+        instance = cls()
 
-    @staticmethod
-    def generate_order():
-        # TODO implement properly
-        n_blocks = 4
-        n_trials = 8
+        order = pd.DataFrame(columns=['block', 'trial', 'channels', 'electrodes'])
+        order.index.name = 'overall trial'
 
-        blocks = []
+        overall_trial = 1
         for block in range(1, n_blocks + 1):
-            trials = []
-            for trial in range(n_trials):
-                n_channels_in_trial = random.randint(1, 8)
+            for trial in range(1, n_trials_per_block + 1):
+                # Randomly select the number of channels in this trial. Favor lower numbers.
+                n_channels_in_trial = random.choices(range(1, 9), weights=[8, 7, 6, 5, 4, 3, 2, 1])[0]
                 channels = random.sample(range(1, 9), n_channels_in_trial)
-                trials.append(channels)
-            blocks.append(trials)
+                electrodes = [instance.channel_electrode_map[channel] for channel in channels]
+                # Set the values
+                order.loc[overall_trial] = {'block': block, 'trial': trial, 'channels': channels,
+                                            'electrodes': electrodes}
+                overall_trial += 1
 
-        # convert to dataframe
+        instance.stim_order = order
 
-        return blocks
+        return instance
 
     # for some reason it says that trial['block'] is invalid, so we turn off inspection
     # noinspection PyTypeChecker
@@ -93,41 +94,25 @@ class StimulationOrder:
         :return: A dict with the block and trial numbers as well as the channels for the new trial."""
         # The index of the trial within the block is subtracted from the overall trial index to reset the block.
         trial_in_block = self.stim_order.loc[self.overall_trial, 'trial']
-        self.overall_trial -= trial_in_block
+        self.overall_trial = self.overall_trial - trial_in_block + 1
         return self.current_trial()
 
     def save_as_excel(self, path: str):
-        """Saves the stimulation order to .csv file.
-        :return: The dataframe that was generated based on the stimulation order and saved."""
-        # todo adjust for stim_order as dataframe in class
-
-        # Turn the order into a dataframe
-        data = []
-
-        for block_idx, trials in enumerate(self.stim_order):
-            for trial_idx, channels in enumerate(trials):
-                # Get the correct electrodes for each channel based on the mapping
-                electrodes = [self.channel_electrode_map[i] for i in channels]
-                data.append({
-                    'block': block_idx,
-                    'trial': trial_idx,
-                    'channels': channels,
-                    'electrodes': electrodes,
-                })
-        df = pd.DataFrame(data)
-        df.index.name = 'overall trial'
+        """Saves the stimulation order to .csv file."""
+        # order_copy = self.stim_order.copy(deep=True) # todo use this?
+        order_copy = self.stim_order
 
         # Alternate the background color of the blocks for readability
-        style = self._color_blocks(df)
-        df = style.data
+        style = self._color_blocks(order_copy)
+        order_copy = style.data
 
         # Auto-adjust column width and save
         writer = pd.ExcelWriter(path, engine='xlsxwriter')
         sheet_name = 'StimulationOrder'
         style.to_excel(writer, sheet_name=sheet_name)
         worksheet = writer.sheets[sheet_name]
-        for idx, col in enumerate(df):
-            series = df[col]
+        for idx, col in enumerate(order_copy):
+            series = order_copy[col]
             max_len = max((
                 series.astype(str).map(len).max(),  # len of largest item
                 len(str(series.name))  # len of column name/header
@@ -135,7 +120,6 @@ class StimulationOrder:
             worksheet.set_column(idx + 1, idx + 1, max_len)  # set column width
         writer.close()
 
-        return df
 
     @staticmethod
     def _color_blocks(dataframe):
@@ -147,3 +131,8 @@ class StimulationOrder:
             return ['background-color: {}'.format(color1 if x['block'] % 2 == 0 else color2) for _ in range(len(x))]
 
         return dataframe.style.apply(color_alternate, axis=1)
+
+
+if __name__ == '__main__':
+    stim_order = StimulationOrder.generate_new()
+    stim_order.save_as_excel("C:\\Users\\julia\\PycharmProjects\\EvokingSensation\\data\\test_stim_order1.xlsx")

@@ -2,7 +2,7 @@ import logging
 import numpy as np
 import tkinter as tk
 from tkinter import ttk, messagebox
-from typing import Callable
+from typing import Callable, Any
 
 from backend.settings import Settings
 from backend.stimulation_order import StimulationOrder
@@ -32,7 +32,8 @@ class ParticipantWindow(tk.Toplevel):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
 
-        # self.start_sense_phase()  # todo delete after testing
+        self.start_sense_phase()  # todo delete after testing
+        self.current_frame.query_sensation()  # todo delete after testing
 
     def _initialize_window_position(self):
         """Positions the window on the right side of the screen."""
@@ -42,12 +43,13 @@ class ParticipantWindow(tk.Toplevel):
 
         # Set window size
         window_width = 1000
-        window_height = 500
+        window_height = 1000
 
         # Calculate the position for the participant window
         # (placing it on the right side of the screen)
         x_position = int(screen_width / 2) - 400
-        y_position = int((screen_height - window_height) / 2)
+        # y_position = int((screen_height - window_height) / 2)
+        y_position = 0
 
         # Set the window geometry to position it
         self.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
@@ -259,8 +261,12 @@ class _SensoryResponsePhase(ttk.Frame):
         self.show_frame(self.EvokedSensationsFrame(self, on_continue=self.on_continue_after_querying,
                                                    trial_number=self.stim_order.current_trial()['trial']))
 
-    def on_continue_after_querying(self):
+    def on_continue_after_querying(self, sensations: list[dict[str, Any]]):
         """What to do after querying is finished and the participant presses continue stimulation."""
+        # Save sensation data
+        print(sensations)
+
+        # Continue
         old_block = self.stim_order.current_trial()['block']
         new_trial_info = self.stim_order.next_trial()
         if new_trial_info is None:
@@ -279,15 +285,15 @@ class _SensoryResponsePhase(ttk.Frame):
     def on_end_of_experiment(self):
         self.show_frame(self.ExperimentCompleted(self))
 
-
     class EvokedSensationsFrame(ttk.Frame):
         # todo make this scrollable
-        def __init__(self, master: tk.Widget, on_continue: Callable, trial_number: int):
+        def __init__(self, master: tk.Widget, on_continue: Callable[[list[dict[str, Any]]], None], trial_number: int):
             """The Frame where the participant can add multiple evoked sensations and continue stimulation.
             :param master: The parent widget.
             :param on_continue: A function to call the participant presses continue.
             :param trial_number: The current trial number."""
             super().__init__(master)
+            self.on_continue = on_continue
 
             # Header Frame
             header_frame = ttk.Frame(self)
@@ -308,7 +314,7 @@ class _SensoryResponsePhase(ttk.Frame):
             add_sensation_button = ttk.Button(self, text='+ Add Sensation', command=self.add_sensation)
 
             # Continue button
-            continue_button = ttk.Button(self, text='▶️ Continue Stimulation', command=on_continue)
+            continue_button = ttk.Button(self, text='▶️ Continue Stimulation', command=self.get_sensations_and_continue)
 
             header_frame.pack(fill='x', expand=True, padx=5, pady=5)
             self.sensations_container.pack(fill='x', expand=True, padx=5, pady=5)
@@ -322,8 +328,8 @@ class _SensoryResponsePhase(ttk.Frame):
 
         def add_sensation(self):
             self.sensations_frames.append(
-                self.QuerySensationFrame(self.sensations_container, len(self.sensations_frames) + 1,
-                                         self.remove_sensation))
+                self.SingleSensationFrame(self.sensations_container, len(self.sensations_frames) + 1,
+                                          self.remove_sensation))
             self.update_sensations()
 
         # todo maybe delete this whole function and do it without regenerating everything!
@@ -338,8 +344,16 @@ class _SensoryResponsePhase(ttk.Frame):
                 self.no_sensations_label.grid(row=0, column=0, padx=5, pady=5)
                 # self.no_sensations_label.pack(fill='x', expand=True, padx=5, pady=5)
 
-        class QuerySensationFrame(ttk.Frame):
+        def get_sensations_and_continue(self):
+            data = []
+            for sensation in self.sensations_frames:
+                data.append(sensation.get_sensation_data())
+            self.on_continue(data)
+
+        class SingleSensationFrame(ttk.Frame):
             SENSATION_TYPES = ['Touch', 'Pulse', 'Tingling', 'Vibration', 'Cramp', 'Pain', 'Heat', 'Cold', 'Other']
+            INTENSITY_OPTIONS = [i for i in range(1, 11)]
+            LOCATIONS = ['D1', 'D2', 'D3', 'D4', 'S1', 'S2', 'S3', 'S4', 'S5', 'calf', 'shin']
 
             def __init__(self, master, sensation_number: int, on_remove):
                 """A Frame which lets the participant input information for a single sensation.
@@ -348,16 +362,17 @@ class _SensoryResponsePhase(ttk.Frame):
                 :param on_remove: A function to call when the sensation is removed."""
                 super().__init__(master, relief='solid', borderwidth=2)
 
+                # Initialize tkinter vars for inputs
                 self.type_var = tk.StringVar(self)
                 self.intensity_var = tk.IntVar(self)
+                self.location_vars = {location: tk.IntVar(self, value=0) for location in self.LOCATIONS}
 
                 # Header Frame (first row)
                 header_frame = ttk.Frame(self)  # The frame at the top of this Widget
                 header_frame.columnconfigure(0, weight=1)
                 self.title_label = ttk.Label(header_frame, text=f'Sensation {sensation_number}', font='bold')
                 self.title_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
-                remove_button = ttk.Button(header_frame, text='- Remove sensation',
-                                           command=lambda: on_remove(self))
+                remove_button = ttk.Button(header_frame, text='- Remove sensation', command=lambda: on_remove(self))
                 remove_button.grid(row=0, column=1, padx=5, pady=5, sticky="e")
 
                 # Sensation Type Frame
@@ -367,11 +382,43 @@ class _SensoryResponsePhase(ttk.Frame):
 
                 # Radio buttons for type
                 for idx, sens_type in enumerate(self.SENSATION_TYPES):
-                    button = ttk.Radiobutton(type_frame, text=sens_type, variable=self.type_var, value=type)
-                    button.grid(row=0, column=idx + 1, padx=5, pady=5)
+                    ttk.Radiobutton(type_frame, text=sens_type, variable=self.type_var, value=sens_type
+                                    ).grid(row=0, column=idx + 1, padx=5, pady=5)
 
-                header_frame.pack(fill='x', expand=True, padx=5, pady=5)
-                type_frame.pack(fill='x', expand=True, padx=5, pady=5)
+                # Sensation Intensity Frame
+                intensity_frame = ttk.Frame(self)
+                intensity_label = ttk.Label(intensity_frame, text='Intensity:')
+                intensity_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+                # Radiobuttons for intensity
+                for idx, intensity in enumerate(self.INTENSITY_OPTIONS):
+                    ttk.Radiobutton(intensity_frame, text=str(intensity), variable=self.intensity_var, value=intensity
+                                    ).grid(row=0, column=idx+1, padx=5, pady=(5, 0))
+                # labels for intensity
+                ttk.Label(intensity_frame, text='Mild', anchor='center').grid(row=1, column=1, columnspan=3, sticky='ew')
+                ttk.Label(intensity_frame, text='Moderate', anchor='center').grid(row=1, column=4, columnspan=4, sticky='ew')
+                ttk.Label(intensity_frame, text='Strong', anchor='center').grid(row=1, column=8, columnspan=3, sticky='ew')
+
+                # location frame
+                location_frame = ttk.Frame(self)
+                location_label = ttk.Label(location_frame, text='Location:')
+                location_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+
+                # make checkboxes for each location
+                for idx, location in enumerate(self.LOCATIONS):
+                    ttk.Checkbutton(location_frame, text=location, variable=self.location_vars[location],
+                                    ).grid(row=0, column=idx + 1, padx=5, pady=5, sticky="w")
+
+
+                # Put all the frames together
+                for frame in [header_frame, type_frame, intensity_frame, location_frame]:
+                    frame.pack(fill='x', expand=True, padx=5, pady=5)
+
+            def get_sensation_data(self):
+                """Access the data the participant has input for this sensation.
+                :returns: A dict with the entries 'type', 'intensity', and 'locations'."""
+                locations = [loc for loc in self.LOCATIONS if self.location_vars[loc].get() == 1]
+                return {'type': self.type_var.get(), 'intensity': self.intensity_var.get(), 'locations': locations}
+
 
     class BlockCompleted(ttk.Frame):
         def __init__(self, master, on_continue: Callable[[], None]):
