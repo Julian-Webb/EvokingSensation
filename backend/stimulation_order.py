@@ -64,12 +64,13 @@ class StimulationOrder:
 
         return instance
 
-    # for some reason it says that trial['block'] is invalid, so we turn off inspection
+    # for some reason it says that trial['block'] and trial['trial'] are invalid, so we turn off inspection
     # noinspection PyTypeChecker
     def current_trial(self):
         """Provides information on the current trial.
         :return: A dict with the block and trial numbers, channels, and electrodes for the current trial."""
         trial = dict(self.stim_order.loc[self.overall_trial])
+        trial['overall_trial'] = self.overall_trial
         # convert block and trial from np.int64 to int
         trial['block'] = int(trial['block'])
         trial['trial'] = int(trial['trial'])

@@ -7,16 +7,17 @@ from typing import Callable, Any
 from backend.settings import Settings
 from backend.stimulation_order import StimulationOrder
 from backend.stimulator import Stimulator, StimulatorError
+from backend.participant_data import ParticipantData
 
 # _COUNTDOWN_DURATION = 3 # in seconds
 _COUNTDOWN_DURATION = 1  # in seconds # todo back to 3
 
 
 class ParticipantWindow(tk.Toplevel):
-    def __init__(self, master: tk.Tk, stimulator: Stimulator, stim_order: StimulationOrder):
+    def __init__(self, master: tk.Tk, stimulator: Stimulator, stim_order: StimulationOrder,
+                 participant_data: ParticipantData):
         super().__init__(master)
-        self.stimulator = stimulator
-        self.stim_order = stim_order
+        self.stimulator, self.stim_order, self.participant_data = stimulator, stim_order, participant_data
 
         self.title('Participant View')
         self._initialize_window_position()
@@ -57,7 +58,7 @@ class ParticipantWindow(tk.Toplevel):
     def start_sense_phase(self):
         logging.info('--- Sensory Response Phase ---')
         self.current_frame.destroy()
-        self.current_frame = _SensoryResponsePhase(self, self.stimulator, self.stim_order)
+        self.current_frame = _SensoryResponsePhase(self, self.stimulator, self.stim_order, self.participant_data)
         self.current_frame.grid(row=0, column=0, sticky='nsew')
 
 
@@ -72,9 +73,8 @@ class _InitialFrame(ttk.Frame):
 
 
 class _CountdownFrame(ttk.Frame):
-    """The Frame that shows a countdown before starting stimulation."""
-
     def __init__(self, master: tk.Widget, duration: int, on_finish: Callable):
+        """The Frame that shows a countdown before starting stimulation."""
         super().__init__(master)
         self.duration_var = tk.IntVar(self, value=duration)
         self.on_finish = on_finish
@@ -221,10 +221,9 @@ class _CalibrationPhase(ttk.Frame):
 
 
 class _SensoryResponsePhase(ttk.Frame):
-    def __init__(self, master, stimulator: Stimulator, stim_order: StimulationOrder):
+    def __init__(self, master, stimulator: Stimulator, stim_order: StimulationOrder, participant_data: ParticipantData):
         super().__init__(master)
-        self.stimulator = stimulator
-        self.stim_order = stim_order
+        self.stimulator, self.stim_order, self.participant_data = stimulator, stim_order, participant_data
 
         self.frame = None
         self.show_frame(_InitialFrame(self, 'Sensory Response Phase', self.start_countdown))
@@ -262,17 +261,18 @@ class _SensoryResponsePhase(ttk.Frame):
                                                    trial_number=self.stim_order.current_trial()['trial']))
 
     def on_continue_after_querying(self, sensations: list[dict[str, Any]]):
-        """What to do after querying is finished and the participant presses continue stimulation."""
+        """What to do after querying is finished and the participant presses continue stimulation.
+        :param sensations: A dict of the sensations the participant entered."""
         # Save sensation data
-        print(sensations)
+        old_trial_info = self.stim_order.current_trial()
+        self.participant_data.update_sensation_data(old_trial_info['overall_trial'], sensations)
 
         # Continue
-        old_block = self.stim_order.current_trial()['block']
         new_trial_info = self.stim_order.next_trial()
         if new_trial_info is None:
             # End of Experiment
             self.on_end_of_experiment()
-        elif old_block != new_trial_info['block']:
+        elif old_trial_info['block'] != new_trial_info['block']:
             # End of block
             self.on_end_of_block()
         else:
@@ -392,11 +392,14 @@ class _SensoryResponsePhase(ttk.Frame):
                 # Radiobuttons for intensity
                 for idx, intensity in enumerate(self.INTENSITY_OPTIONS):
                     ttk.Radiobutton(intensity_frame, text=str(intensity), variable=self.intensity_var, value=intensity
-                                    ).grid(row=0, column=idx+1, padx=5, pady=(5, 0))
+                                    ).grid(row=0, column=idx + 1, padx=5, pady=(5, 0))
                 # labels for intensity
-                ttk.Label(intensity_frame, text='Mild', anchor='center').grid(row=1, column=1, columnspan=3, sticky='ew')
-                ttk.Label(intensity_frame, text='Moderate', anchor='center').grid(row=1, column=4, columnspan=4, sticky='ew')
-                ttk.Label(intensity_frame, text='Strong', anchor='center').grid(row=1, column=8, columnspan=3, sticky='ew')
+                ttk.Label(intensity_frame, text='Mild', anchor='center').grid(row=1, column=1, columnspan=3,
+                                                                              sticky='ew')
+                ttk.Label(intensity_frame, text='Moderate', anchor='center').grid(row=1, column=4, columnspan=4,
+                                                                                  sticky='ew')
+                ttk.Label(intensity_frame, text='Strong', anchor='center').grid(row=1, column=8, columnspan=3,
+                                                                                sticky='ew')
 
                 # location frame
                 location_frame = ttk.Frame(self)
@@ -408,7 +411,6 @@ class _SensoryResponsePhase(ttk.Frame):
                     ttk.Checkbutton(location_frame, text=location, variable=self.location_vars[location],
                                     ).grid(row=0, column=idx + 1, padx=5, pady=5, sticky="w")
 
-
                 # Put all the frames together
                 for frame in [header_frame, type_frame, intensity_frame, location_frame]:
                     frame.pack(fill='x', expand=True, padx=5, pady=5)
@@ -418,7 +420,6 @@ class _SensoryResponsePhase(ttk.Frame):
                 :returns: A dict with the entries 'type', 'intensity', and 'locations'."""
                 locations = [loc for loc in self.LOCATIONS if self.location_vars[loc].get() == 1]
                 return {'type': self.type_var.get(), 'intensity': self.intensity_var.get(), 'locations': locations}
-
 
     class BlockCompleted(ttk.Frame):
         def __init__(self, master, on_continue: Callable[[], None]):

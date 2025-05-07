@@ -66,7 +66,11 @@ class Settings:
 
     def get_sensation_data_path(self):
         """The path for the file storing the sensation data the participant entered."""
-        return os.path.join(self.participant_data_dir.get(), 'sensation_data.pkl')
+        return os.path.join(self.participant_data_dir.get(), 'sensation_data.json')
+
+    def get_calibration_data_path(self):
+        """The path for the file storing what happened during calibration"""
+        return os.path.join(self.participant_data_dir.get(), 'calibration_data.json')
 
     def _update_period_from_frequency(self, *_):
         """Update the period based on the frequency."""

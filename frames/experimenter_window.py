@@ -6,6 +6,7 @@ from typing import Callable
 
 from serial.tools import list_ports
 
+from backend.participant_data import ParticipantData
 from frames.participant_window import ParticipantWindow
 from backend.settings import Settings
 from backend.stimulation_order import StimulationOrder
@@ -17,6 +18,7 @@ class ExperimenterWindow(tk.Tk):
         super().__init__()
 
         self.stim_order = StimulationOrder.from_file(Settings().get_stim_order_path())
+        self.participant_data = None
 
         self.title("Experimenter View")
         self.resizable(False, False)
@@ -77,9 +79,9 @@ class ExperimenterWindow(tk.Tk):
     def on_start_experiment(self):
         self.stimulation_buttons.disable_buttons()  # disable starting stimulation
         self.on_start_any()
-
+        self.participant_data = ParticipantData()
         # open the participant window
-        self.participant_window = ParticipantWindow(self, self.stimulator, self.stim_order)
+        self.participant_window = ParticipantWindow(self, self.stimulator, self.stim_order, self.participant_data)
 
     def on_stop_experiment(self):
         self.stimulation_buttons.enable_start()  # enable starting stimulation
