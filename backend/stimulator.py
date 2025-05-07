@@ -1,10 +1,19 @@
 import logging
 import time
+from dataclasses import dataclass
 import tkinter as tk
 from tkinter import messagebox
 from typing import Callable
 
 from sciencemode import sciencemode as sm
+
+
+@dataclass
+class StimulationParameters:
+    amplitude_ma: float
+    phase_duration: int
+    interpulse_interval: int
+    period_ms: float
 
 
 class SerialPortError(Exception):
@@ -107,8 +116,7 @@ class Stimulator:
         logging.debug(f"fw_version: {fw_version.major}.{fw_version.minor}.{fw_version.revision}")
         logging.debug(f"smpt_version: {smpt_version.major}.{smpt_version.minor}.{smpt_version.revision}")
 
-    def rectangular_pulse(self, channel: int, amplitude_ma: float, phase_duration: int, interpulse_interval: int,
-                          period_ms: float):
+    def rectangular_pulse(self, channel: int, stim_params: StimulationParameters):
         """
         Configure a rectangular pulse for the specified channel using mid-level configuration.
         The pulse consists of three stages: a positive amplitude phase,
@@ -117,11 +125,7 @@ class Stimulator:
         and amplitude settings.
 
         :param channel: The channel number as depicted on the stimulator (1-8)
-        :param amplitude_ma: Amplitude value in milliamps for the positive and negative phases.
-        :param phase_duration: Duration in milliseconds for the positive and negative phases.
-        :param interpulse_interval: Duration in milliseconds of the zero-current phase between the positive and
-            negative phases.
-        :param period_ms: Total period of the rectangular pulse in milliseconds.
+        :param stim_params: A StimulationParameters object with the amplitude, phase_duration, interpulse_interval, and period
         :return: None
         """
         channel_adjusted = channel - 1  # adjust channel for 0-indexing
@@ -131,14 +135,14 @@ class Stimulator:
         self.ml_update.enable_channel[channel_adjusted] = True
 
         config = self.ml_update.channel_config[channel_adjusted]
-        config.period = period_ms
+        config.period = stim_params.period_ms
         config.number_of_points = 3
-        config.points[0].current = amplitude_ma
-        config.points[0].time = phase_duration
+        config.points[0].current = stim_params.amplitude_ma
+        config.points[0].time = stim_params.phase_duration
         config.points[1].current = 0
-        config.points[1].time = interpulse_interval
-        config.points[2].current = -amplitude_ma
-        config.points[2].time = phase_duration
+        config.points[1].time = stim_params.interpulse_interval
+        config.points[2].current = -stim_params.amplitude_ma
+        config.points[2].time = stim_params.phase_duration
 
     def _reset_pulse_configs(self):
         """Rests the pulse configurations to remove the previously specified pulses"""

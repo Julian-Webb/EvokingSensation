@@ -307,10 +307,8 @@ class _StimulationButtons(ttk.Frame):
 
     def _on_start(self):
         s = Settings()
-
         # update the pulse configuration
-        self.stimulator.rectangular_pulse(s.channel.get(), s.amplitude.get(), s.phase_duration.get(),
-                                          s.interphase_interval.get(), s.period_numeric())
+        self.stimulator.rectangular_pulse(s.channel.get(), s.get_stimulation_parameters())
 
         start_time = self.stimulator.stimulate_ml(s.stim_duration.get(), self._on_stimulation_finish, self._on_error)
         self.timer.start_timer(start_time)

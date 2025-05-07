@@ -130,8 +130,8 @@ class _CalibrationPhase(ttk.Frame):
     def stimulate(self):
         s = Settings()
         # update the pulse configuration
-        self.stimulator.rectangular_pulse(s.channel.get(), s.amplitude.get(), s.phase_duration.get(),
-                                          s.interphase_interval.get(), s.period_numeric())
+        # todo might want to get the channels from a file here.
+        self.stimulator.rectangular_pulse(s.channel.get(), s.get_stimulation_parameters())
         self.stimulator.stimulate_ml(s.stim_duration.get(), self.query_intensity, self.on_stimulation_error)
         self.show_frame(_StimulationFrame(self))
 
@@ -243,8 +243,7 @@ class _SensoryResponsePhase(ttk.Frame):
         s = Settings()
         # update the pulse configuration
         for channel in self.stim_order.current_trial()['channels']:
-            self.stimulator.rectangular_pulse(channel, s.amplitude.get(), s.phase_duration.get(),
-                                              s.interphase_interval.get(), s.period_numeric())
+            self.stimulator.rectangular_pulse(channel, s.get_stimulation_parameters())
         self.stimulator.stimulate_ml(s.stim_duration.get(), self.query_sensation, self.on_stimulation_error)
         self.show_frame(_StimulationFrame(self))
 

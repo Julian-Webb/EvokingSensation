@@ -1,6 +1,8 @@
 import os
 from collections import OrderedDict
 import tkinter as tk
+from backend.stimulator import StimulationParameters
+
 
 # We ignore unresolved references because we initialize properties with setattr, and it doesn't understand this.
 # noinspection PyUnresolvedReferences
@@ -31,7 +33,7 @@ class Settings:
             'stim_duration': {'label': 'Stimulation Duration (s)', 'range': (0.1, 240), 'increment': 1,
                               'numeric_type': float,
                               # 'default': 5
-                              'default': 0.1 # todo change back
+                              'default': 0.1  # todo change back
                               },
             'frequency': {'label': 'Frequency (Hz)', 'range': (1, 1000), 'increment': 1.0, 'numeric_type': float,
                           'default': 50.0},
@@ -41,11 +43,12 @@ class Settings:
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
             cls._instance = super(Settings, cls).__new__(cls, *args, **kwargs)
-            ci = cls._instance # alias for readability
+            ci = cls._instance  # alias for readability
 
             # Variable for the path
             # todo handling for actual path
-            ci.participant_data_dir = tk.StringVar(value=os.path.join(os.getcwd(), 'data', 'test_participant'))
+            base_path = 'C:\\Users\\julia\\PycharmProjects\\EvokingSensation'
+            ci.participant_data_dir = tk.StringVar(value=os.path.join(base_path, 'data', 'test_participant'))
 
             # Initialize tk.IntVars / tk.DoubleVars for all parameters corresponding to their type
             for property_name, options in cls.PARAMETER_OPTIONS.items():
@@ -60,17 +63,12 @@ class Settings:
 
         return cls._instance
 
-    def get_stim_order_path(self):
-        """The path for the stimulation order file."""
-        return os.path.join(self.participant_data_dir.get(), 'stimulation_order.xlsx')
-
-    def get_sensation_data_path(self):
-        """The path for the file storing the sensation data the participant entered."""
-        return os.path.join(self.participant_data_dir.get(), 'sensation_data.json')
-
-    def get_calibration_data_path(self):
-        """The path for the file storing what happened during calibration"""
-        return os.path.join(self.participant_data_dir.get(), 'calibration_data.json')
+    def get_stimulation_parameters(self):
+        """
+        :return: StimulationParameters object with the current configuration of amplitude, phase duration, interphase interval, and period.
+        """
+        return StimulationParameters(self.amplitude.get(), self.phase_duration.get(), self.interphase_interval.get(),
+                                     self.period_numeric())
 
     def _update_period_from_frequency(self, *_):
         """Update the period based on the frequency."""
@@ -82,3 +80,14 @@ class Settings:
     def period_numeric(self):
         return (1 / self.frequency.get()) * 1000  # Convert to milliseconds
 
+    def get_stim_order_path(self):
+        """The path for the stimulation order file."""
+        return os.path.join(self.participant_data_dir.get(), 'stimulation_order.xlsx')
+
+    def get_sensation_data_path(self):
+        """The path for the file storing the sensation data the participant entered."""
+        return os.path.join(self.participant_data_dir.get(), 'sensation_data.json')
+
+    def get_calibration_data_path(self):
+        """The path for the file storing what happened during calibration"""
+        return os.path.join(self.participant_data_dir.get(), 'calibration_data.json')
