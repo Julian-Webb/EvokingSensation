@@ -2,10 +2,18 @@ import ast
 import logging
 import random
 from typing import Optional
-
+from dataclasses import dataclass
 import pandas as pd
 import numpy as np
 
+@dataclass
+class TrialInfo:
+    """Contains overall_trial, block, trial, channels, and electrodes."""
+    overall_trial: int
+    block: int
+    trial: int
+    channels: list[int]
+    electrodes: list[tuple[int]]
 
 class StimulationOrder:
     def __init__(self):
@@ -69,12 +77,12 @@ class StimulationOrder:
     def current_trial(self):
         """Provides information on the current trial.
         :return: A dict with the block and trial numbers, channels, and electrodes for the current trial."""
-        trial = dict(self.stim_order.loc[self.overall_trial])
-        trial['overall_trial'] = self.overall_trial
+        row = dict(self.stim_order.loc[self.overall_trial])
         # convert block and trial from np.int64 to int
-        trial['block'] = int(trial['block'])
-        trial['trial'] = int(trial['trial'])
-        return trial
+        block = int(row['block'])
+        trial = int(row['trial'])
+
+        return TrialInfo(self.overall_trial, block, trial, row['channels'], row['electrodes'])
 
     def next_trial(self):
         """Advance to the next trial.
@@ -83,9 +91,9 @@ class StimulationOrder:
         # Go to the next trial unless this is the last one.
         if self.overall_trial < len(self.stim_order):
             self.overall_trial += 1
-            current_trial = self.current_trial()
-            logging.debug(f"New trial. Block: {current_trial['block']}, trial: {current_trial['trial']}")
-            return current_trial
+            cur_trial = self.current_trial()
+            logging.debug(f"New trial. Block: {cur_trial.block}, trial: {cur_trial.trial}")
+            return cur_trial
         else:
             logging.debug("End of experiment.")
             return None

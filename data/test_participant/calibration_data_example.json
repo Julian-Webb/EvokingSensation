@@ -1,0 +1,27 @@
+[
+  {
+    "timestamp": "2025-05-07T15:25:40.705042",
+    "amplitude_ma": 2.0,
+    "intensity": "Very weak"
+  },
+  {
+    "timestamp": "2025-05-07T15:25:43.154829",
+    "amplitude_ma": 4.0,
+    "intensity": "Nothing"
+  },
+  {
+    "timestamp": "2025-05-07T15:25:46.672057",
+    "amplitude_ma": 7.0,
+    "intensity": "Strong"
+  },
+  {
+    "timestamp": "2025-05-07T15:25:51.618952",
+    "amplitude_ma": 7.5,
+    "intensity": "Painful"
+  },
+  {
+    "timestamp": "2025-05-07T15:25:54.834107",
+    "amplitude_ma": 6.5,
+    "intensity": "Very strong"
+  }
+]

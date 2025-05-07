@@ -1,28 +1,31 @@
 import logging
 import json
+from datetime import datetime
 
 from backend.settings import Settings
+from backend.stimulation_order import TrialInfo
 
 
 class ParticipantData:
-    # todo delete?
-    # CALIBRATION_DATA_FILE = 'calibration_data.json'
-    # SENSATION_DATA_FILE = 'sensation_data.json'
-
     def __init__(self, ):
         """Handles the participant data, such as block and trial information, and inputted sensory data."""
-        self.calibration_data = {}
+        self.calibration_data = []
         self.sensation_data = {}
 
-    def update_calibration_data(self, iteration: int, amplitude_ma: float, intensity: str):
-        self.calibration_data[iteration] = {'amplitude_ma': amplitude_ma, 'intensity': intensity}
+    def update_calibration_data(self, amplitude_ma: float, intensity: str):
+        self.calibration_data.append({'timestamp': datetime.now().isoformat(), 'amplitude_ma': amplitude_ma,
+                                      'intensity': intensity})
         self.save_calibration_data()
 
-    def update_sensation_data(self, overall_trial: int, sensations: list[dict]):
-        """Update and save the sensation data for a trial
-        :param overall_trial: The overall trial number
+    def update_sensation_data(self, trial_info: TrialInfo, sensations: list[dict]):
+        """Update and save the sensation data for a trial.
+        :param trial_info: The information for this trial.
         :param sensations: A list of the different sensations for this trial"""
-        self.sensation_data[overall_trial] = sensations
+        # todo use upacking of trial_info or something to make this more concise
+        self.sensation_data[trial_info.overall_trial] = {'timestamp': datetime.now().isoformat(),
+                                                         'block': trial_info.block, 'trial': trial_info.trial,
+                                                         'channels': trial_info.channels,
+                                                         'electrodes': trial_info.electrodes, 'sensations': sensations}
         self.save_sensation_data()
 
     def save_calibration_data(self):

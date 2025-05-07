@@ -1,0 +1,213 @@
+{
+  "1": {
+    "timestamp": "2025-05-07T15:03:55.247854",
+    "block": 1,
+    "trial": 1,
+    "channels": [
+      1,
+      2
+    ],
+    "electrodes": [
+      [
+        1,
+        2
+      ],
+      [
+        3,
+        4
+      ]
+    ],
+    "sensations": [
+      {
+        "type": "Vibration",
+        "intensity": 7,
+        "locations": [
+          "S2",
+          "S4"
+        ]
+      },
+      {
+        "type": "Tingling",
+        "intensity": 6,
+        "locations": [
+          "S1"
+        ]
+      }
+    ]
+  },
+  "2": {
+    "timestamp": "2025-05-07T15:04:05.636740",
+    "block": 1,
+    "trial": 2,
+    "channels": [
+      1,
+      8,
+      6,
+      5,
+      4,
+      7,
+      3
+    ],
+    "electrodes": [
+      [
+        1,
+        2
+      ],
+      [
+        15,
+        16
+      ],
+      [
+        11,
+        12
+      ],
+      [
+        9,
+        10
+      ],
+      [
+        7,
+        8
+      ],
+      [
+        13,
+        14
+      ],
+      [
+        5,
+        6
+      ]
+    ],
+    "sensations": [
+      {
+        "type": "Tingling",
+        "intensity": 6,
+        "locations": [
+          "S1",
+          "S4"
+        ]
+      },
+      {
+        "type": "Tingling",
+        "intensity": 6,
+        "locations": [
+          "S1",
+          "S4",
+          "calf"
+        ]
+      }
+    ]
+  },
+  "3": {
+    "timestamp": "2025-05-07T15:04:16.190978",
+    "block": 2,
+    "trial": 1,
+    "channels": [
+      5,
+      7,
+      2,
+      6,
+      4,
+      1
+    ],
+    "electrodes": [
+      [
+        9,
+        10
+      ],
+      [
+        13,
+        14
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        11,
+        12
+      ],
+      [
+        7,
+        8
+      ],
+      [
+        1,
+        2
+      ]
+    ],
+    "sensations": [
+      {
+        "type": "Tingling",
+        "intensity": 8,
+        "locations": [
+          "D3",
+          "S4"
+        ]
+      },
+      {
+        "type": "Pain",
+        "intensity": 8,
+        "locations": [
+          "S3",
+          "S5"
+        ]
+      }
+    ]
+  },
+  "4": {
+    "timestamp": "2025-05-07T15:04:30.042367",
+    "block": 2,
+    "trial": 2,
+    "channels": [
+      2,
+      7,
+      4
+    ],
+    "electrodes": [
+      [
+        3,
+        4
+      ],
+      [
+        13,
+        14
+      ],
+      [
+        7,
+        8
+      ]
+    ],
+    "sensations": [
+      {
+        "type": "Pulse",
+        "intensity": 3,
+        "locations": [
+          "D3"
+        ]
+      },
+      {
+        "type": "Touch",
+        "intensity": 1,
+        "locations": [
+          "D1"
+        ]
+      },
+      {
+        "type": "Pulse",
+        "intensity": 2,
+        "locations": [
+          "D2",
+          "D3"
+        ]
+      },
+      {
+        "type": "Tingling",
+        "intensity": 5,
+        "locations": [
+          "D4"
+        ]
+      }
+    ]
+  }
+}

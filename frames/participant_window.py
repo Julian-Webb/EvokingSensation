@@ -27,7 +27,7 @@ class ParticipantWindow(tk.Toplevel):
                       lambda: messagebox.showinfo("Not closable",
                                                   "This window must be closed in the experimenter view"))
 
-        self.current_frame = _CalibrationPhase(self, stimulator, self.start_sense_phase)
+        self.current_frame = _CalibrationPhase(self, stimulator, self.start_sense_phase, self.participant_data)
         self.current_frame.grid(row=0, column=0, sticky='nsew')
 
         self.columnconfigure(0, weight=1)
@@ -108,10 +108,9 @@ class _StimulationFrame(ttk.Frame):
 
 class _CalibrationPhase(ttk.Frame):
 
-    def __init__(self, master, stimulator: Stimulator, on_phase_over: Callable):
+    def __init__(self, master, stimulator: Stimulator, on_phase_over: Callable, participant_data: ParticipantData):
         super().__init__(master)
-        self.stimulator = stimulator
-        self.on_phase_over = on_phase_over
+        self.stimulator, self.on_phase_over, self.participant_data = stimulator, on_phase_over, participant_data
 
         self.frame = None  # Current frame
         self.show_frame(_InitialFrame(self, 'Calibration Phase', self.start_countdown))
@@ -142,12 +141,18 @@ class _CalibrationPhase(ttk.Frame):
         raise StimulatorError('The stimulator signaled an error.')
         # todo decide what the program should do now. It currently just get's stuck in the StimulationFrame
 
-    def adjust_amplitude(self, intensity: str):
-        """Adjust the amplitude based on the intensity selected by the participant.
+    def query_intensity(self):
+        self.show_frame(self.InputIntensityFrame(self, on_continue=self.on_continue_after_querying))
+
+    def on_continue_after_querying(self, intensity: str):
+        """Save the stimulation amplitude and reported intensity and adjust the amplitude based on the intensity selected by the participant.
         :param intensity: The intensity selected by the participant."""
         # TODO this function doesn't continue yet if the amplitude is at its minimum/maximum but the participant doesn't
         #  feel a very strong sensation. How should this be handled?
+        # Save stimulation parameters
+        self.participant_data.update_calibration_data(Settings().amplitude.get(), intensity)
 
+        # Adjust the amplitude
         if intensity == 'Nothing':
             increment_ma = 3.0  # increment in milliampere
         elif intensity == 'Very weak':
@@ -181,9 +186,6 @@ class _CalibrationPhase(ttk.Frame):
         else:
             # We've reached our target intensity and the calibration phase is over.
             self.show_frame(self.PhaseCompleted(self, self.on_phase_over))
-
-    def query_intensity(self):
-        self.show_frame(self.InputIntensityFrame(self, on_continue=self.adjust_amplitude))
 
     class InputIntensityFrame(ttk.Frame):
         INTENSITY_OPTIONS = ['Nothing', 'Very weak', 'Weak', 'Moderate', 'Strong', 'Very strong', 'Painful']
@@ -242,7 +244,7 @@ class _SensoryResponsePhase(ttk.Frame):
     def stimulate(self):
         s = Settings()
         # update the pulse configuration
-        for channel in self.stim_order.current_trial()['channels']:
+        for channel in self.stim_order.current_trial().channels:
             self.stimulator.rectangular_pulse(channel, s.get_stimulation_parameters())
         self.stimulator.stimulate_ml(s.stim_duration.get(), self.query_sensation, self.on_stimulation_error)
         self.show_frame(_StimulationFrame(self))
@@ -255,23 +257,22 @@ class _SensoryResponsePhase(ttk.Frame):
         # todo decide what the program should do now.
 
     def query_sensation(self):
-        # todo adjust trial number
         self.show_frame(self.EvokedSensationsFrame(self, on_continue=self.on_continue_after_querying,
-                                                   trial_number=self.stim_order.current_trial()['trial']))
+                                                   trial_number=self.stim_order.current_trial().trial))
 
     def on_continue_after_querying(self, sensations: list[dict[str, Any]]):
         """What to do after querying is finished and the participant presses continue stimulation.
         :param sensations: A dict of the sensations the participant entered."""
         # Save sensation data
         old_trial_info = self.stim_order.current_trial()
-        self.participant_data.update_sensation_data(old_trial_info['overall_trial'], sensations)
+        self.participant_data.update_sensation_data(old_trial_info, sensations)
 
         # Continue
         new_trial_info = self.stim_order.next_trial()
         if new_trial_info is None:
             # End of Experiment
             self.on_end_of_experiment()
-        elif old_trial_info['block'] != new_trial_info['block']:
+        elif old_trial_info.block != new_trial_info.block:
             # End of block
             self.on_end_of_block()
         else:
