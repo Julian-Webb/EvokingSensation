@@ -8,10 +8,12 @@ from backend.settings import Settings
 from backend.stimulation_order import StimulationOrder
 from backend.stimulator import Stimulator, StimulatorError
 from backend.participant_data import ParticipantData
+from .location_inputter import LocationInputter, LocationType
 
 # _COUNTDOWN_DURATION = 3 # in seconds
 _COUNTDOWN_DURATION = 1  # in seconds # todo back to 3
 
+# todo test whether location data is being save
 
 class ParticipantWindow(tk.Toplevel):
     def __init__(self, master: tk.Tk, stimulator: Stimulator, stim_order: StimulationOrder,
@@ -33,8 +35,8 @@ class ParticipantWindow(tk.Toplevel):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
 
-        # self.start_sense_phase()  # todo delete after testing
-        # self.current_frame.query_sensation()  # todo delete after testing
+        self.start_sense_phase()  # todo delete after testing
+        self.current_frame.query_sensation()  # todo delete after testing
 
     def _initialize_window_position(self):
         """Positions the window on the right side of the screen."""
@@ -365,7 +367,8 @@ class _SensoryResponsePhase(ttk.Frame):
                 # Initialize tkinter vars for inputs
                 self.type_var = tk.StringVar(self)
                 self.intensity_var = tk.IntVar(self)
-                self.location_vars = {location: tk.IntVar(self, value=0) for location in self.LOCATIONS}
+                # todo remove?
+                self.location_vars = {location: tk.BooleanVar(self, value=False) for location in self.LOCATIONS}
 
                 # Header Frame (first row)
                 header_frame = ttk.Frame(self)  # The frame at the top of this Widget
@@ -404,12 +407,17 @@ class _SensoryResponsePhase(ttk.Frame):
                 # location frame
                 location_frame = ttk.Frame(self)
                 location_label = ttk.Label(location_frame, text='Location:')
-                location_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+                location_label.grid(row=0, column=0, columnspan=2, padx=5, pady=(0, 5), sticky="w")
 
-                # make checkboxes for each location
-                for idx, location in enumerate(self.LOCATIONS):
-                    ttk.Checkbutton(location_frame, text=location, variable=self.location_vars[location],
-                                    ).grid(row=0, column=idx + 1, padx=5, pady=5, sticky="w")
+                # Make inputters for foot and leg
+                foot = LocationInputter(location_frame, LocationType.FOOT, self.location_vars, scaling=0.3)
+                leg = LocationInputter(location_frame, LocationType.LEG, self.location_vars, scaling=0.3)
+                foot.grid(row=1, column=0, padx=5, pady=5)
+                leg.grid(row=1, column=1, padx=5, pady=5)
+
+                # for idx, location in enumerate(self.LOCATIONS):
+                #     ttk.Checkbutton(location_frame, text=location, variable=self.location_vars[location],
+                #                     ).grid(row=0, column=idx + 1, padx=5, pady=5, sticky="w")
 
                 # Put all the frames together
                 for frame in [header_frame, type_frame, intensity_frame, location_frame]:
@@ -418,7 +426,8 @@ class _SensoryResponsePhase(ttk.Frame):
             def get_sensation_data(self):
                 """Access the data the participant has input for this sensation.
                 :returns: A dict with the entries 'type', 'intensity', and 'locations'."""
-                locations = [loc for loc in self.LOCATIONS if self.location_vars[loc].get() == 1]
+                # todo adjust for new location vars
+                locations = [loc for loc in self.LOCATIONS if self.location_vars[loc].get()]
                 return {'type': self.type_var.get(), 'intensity': self.intensity_var.get(), 'locations': locations}
 
     class BlockCompleted(ttk.Frame):

@@ -7,7 +7,7 @@ from typing import Callable
 from serial.tools import list_ports
 
 from backend.participant_data import ParticipantData
-from frames.participant_window import ParticipantWindow
+from widgets.participant_window import ParticipantWindow
 from backend.settings import Settings
 from backend.stimulation_order import StimulationOrder
 from backend.stimulator import Stimulator, SerialPortError
@@ -26,7 +26,7 @@ class ExperimenterWindow(tk.Tk):
         self.participant_window = None
 
         # Define a custom style for the stop button
-        style = ttk.Style()
+        style = ttk.Style(self)
         style.configure("EnabledStopButton.TButton", background="red", foreground="red")
 
         self.stimulator = Stimulator(self)
@@ -45,8 +45,8 @@ class ExperimenterWindow(tk.Tk):
                       self.experiment_buttons,):
             frame.pack(padx=10, pady=10)
 
-        # self.com_port_manager.open_port()  # todo delete after testing
-        # self.on_start_experiment()  # todo delete after testing
+        self.com_port_manager.open_port()  # todo delete after testing
+        self.on_start_experiment()  # todo delete after testing
 
     def on_port_opened(self):
         """What to do when the port is successfully opened."""
