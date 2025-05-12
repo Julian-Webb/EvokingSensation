@@ -17,7 +17,7 @@ class _SingleSensationFrame(tk.Frame):
         :param master: The parent widget.
         :param sensation_number: The number of the sensation.
         :param on_remove: A function to call when the sensation is removed."""
-        super().__init__(master, highlightbackground='blue', highlightthickness=2, )
+        super().__init__(master, borderwidth=1, relief="solid")
 
         # Initialize tkinter vars for inputs
         self.type_var = tk.StringVar(self)
@@ -64,8 +64,8 @@ class _SingleSensationFrame(tk.Frame):
         location_label.grid(row=0, column=0, columnspan=2, padx=5, pady=(0, 5), sticky="w")
 
         # Make inputters for foot and leg
-        foot = LocationInputter(location_frame, LocationType.FOOT, self.location_vars, scaling=0.3)
-        leg = LocationInputter(location_frame, LocationType.LEG, self.location_vars, scaling=0.3)
+        foot = LocationInputter(location_frame, LocationType.FOOT, self.location_vars, scaling=0.4)
+        leg = LocationInputter(location_frame, LocationType.LEG, self.location_vars, scaling=0.4)
         foot.grid(row=1, column=0, padx=5, pady=5)
         leg.grid(row=1, column=1, padx=5, pady=5)
 
@@ -81,42 +81,50 @@ class _SingleSensationFrame(tk.Frame):
 
 
 class EvokedSensationsFrame(tk.Frame):
-    # todo make this scrollable
     def __init__(self, master: tk.Widget, on_continue: Callable[[list[dict[str, Any]]], None], trial_number: int):
         """The Frame where the participant can add multiple evoked sensations and continue stimulation.
         :param master: The parent widget.
         :param on_continue: A function to call the participant presses continue.
         :param trial_number: The current trial number."""
-        super().__init__(master,
-                         highlightbackground='red', highlightthickness=2,
-                         # relief='solid', borderwidth=2,
-                         )
+        super().__init__(master)
         self.on_continue = on_continue
 
         # The canvas is just here to enable scrolling and only contains the main_frame
-        self.canvas = tk.Canvas(self,
-                                highlightbackground='yellow', highlightthickness=2,
-                                )
-        # The main_frame contains all content except the scrollbar
-        self.main_frame = ttk.Frame(self.canvas)
-        self.window_id = self.canvas.create_window((0, 0), window=self.main_frame, anchor='n')
-
-        # link canvas and scrollbar
-        scrollbar = tk.Scrollbar(self, orient='vertical', command=self.canvas.yview)
-        self.canvas.configure(yscrollcommand=scrollbar.set)
-        # Make the entire canvas scrollable
-        self.canvas.bind('<Configure>', self._on_canvas_resize)
-        # resize the scroll region when the main_frame changes size (because sensations are added / removed)
-        self.main_frame.bind('<Configure>', self._on_frame_configure)
-        # self.canvas.bind("<MouseWheel>", self._on_mousewheel)  # Add mousewheel scrolling
-
+        self.canvas = tk.Canvas(self)
         self.canvas.grid(row=0, column=0, sticky='nsew')
+
+        scrollbar = tk.Scrollbar(self, orient='vertical', command=self.canvas.yview)
         scrollbar.grid(row=0, column=1, sticky='ns')
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
+        # link canvas and scrollbar
+        self.canvas.configure(yscrollcommand=scrollbar.set)
+        # Make the entire canvas scrollable
+        self.canvas.bind('<Configure>', self._on_canvas_resize)
+
+        # The main_frame contains all content except the scrollbar
+        self.main_frame = ttk.Frame(self.canvas)
+        self._create_main_content(trial_number)
+
+        # resize the scroll region when the main_frame changes size (because sensations are added / removed)
+        self.main_frame.bind('<Configure>', self._on_frame_configure)
+        canvas_center = self.canvas.winfo_width() // 2
+        self.window_id = self.canvas.create_window((self.canvas.winfo_reqwidth() / 2, 0), window=self.main_frame,
+                                                   anchor='n')
+
+        if sys.platform == 'darwin':  # mac
+            on_mousewheel = self._on_mousewheel_mac
+        elif sys.platform.startswith('win'):  # windows
+            on_mousewheel = self._on_mousewheel_windows
+        else:
+            raise NotImplementedError(f"Unsupported platform: {sys.platform}")
+        self.canvas.bind_all("<MouseWheel>", on_mousewheel)
+
+    def _create_main_content(self, trial_number):
+        """Must be called during initialization to create the main content of the Frame."""
         # Header Frame
-        header_frame = ttk.Frame(self.main_frame)
+        header_frame = tk.Frame(self.main_frame )
         header_frame.columnconfigure(0, weight=1)
         title = ttk.Label(header_frame, text='Evoked Sensations', font='bold')
         trial_number_label = ttk.Label(header_frame, text=f'Trial {trial_number}')
@@ -124,11 +132,12 @@ class EvokedSensationsFrame(tk.Frame):
         trial_number_label.grid(row=0, column=1, sticky="e")
 
         # Frame for all evoked sensations
-        self.sensations_container = ttk.Frame(self.main_frame)
+        self.sensations_container = tk.Frame(self.main_frame)
         self.no_sensations_label = ttk.Label(self.sensations_container,
-                                             text="If you felt no sensations, please press continue.\nOtherwise, add a sensation.")
+                                             text='If you felt a sensation, please add it.\nOtherwise, continue stimulation.',
+                                             font='bold')
+        self.no_sensations_label.pack(padx=5, pady=5)
         self.sensations_frames = []
-        self.add_sensation()
 
         # Add sensation button
         add_sensation_button = ttk.Button(self.main_frame, text='+ Add Sensation', command=self.add_sensation)
@@ -138,17 +147,9 @@ class EvokedSensationsFrame(tk.Frame):
                                      command=self.get_sensations_and_continue)
 
         header_frame.pack(fill='x', expand=True, padx=5, pady=5)
-        self.sensations_container.pack(fill='x', expand=True, padx=5, pady=5)
+        self.sensations_container.pack(padx=5, pady=5)
         add_sensation_button.pack()
         continue_button.pack()
-
-        if sys.platform == 'darwin':  # mac
-            on_mousewheel = self._on_mousewheel_mac
-        elif sys.platform == 'win32':  # windows
-            on_mousewheel = self._on_mousewheel_windows
-        else:
-            raise NotImplementedError(f"Unsupported platform: {sys.platform}")
-        self.canvas.bind_all("<MouseWheel>", on_mousewheel)
 
     def _on_mousewheel_windows(self, event):
         self.canvas.yview_scroll(-1 * int(event.delta // 120), "units")
