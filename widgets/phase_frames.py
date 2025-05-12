@@ -4,7 +4,7 @@ from tkinter import ttk
 from typing import Callable
 
 
-class TextAndButtonFrame(ttk.Frame):
+class TextAndButtonFrame(tk.Frame):
     def __init__(self, master, title_text: str, button_text: str, command: Callable):
         super().__init__(master)
         title = ttk.Label(self, text=title_text, font='bold')
@@ -14,7 +14,7 @@ class TextAndButtonFrame(ttk.Frame):
         continue_button.pack()
 
 
-class CountdownFrame(ttk.Frame):
+class CountdownFrame(tk.Frame):
     def __init__(self, master: tk.Widget, duration: int, on_finish: Callable):
         """The Frame that shows a countdown before starting stimulation."""
         super().__init__(master)
@@ -38,7 +38,7 @@ class CountdownFrame(ttk.Frame):
             self.on_finish()
 
 
-class StimulationFrame(ttk.Frame):
+class StimulationFrame(tk.Frame):
     def __init__(self, master: tk.Widget):
         """The Frame to show when stimulation is ongoing"""
         super().__init__(master)
@@ -47,7 +47,7 @@ class StimulationFrame(ttk.Frame):
         title.pack()
 
 
-class InputIntensityFrame(ttk.Frame):
+class InputIntensityFrame(tk.Frame):
     INTENSITY_OPTIONS = ['Nothing', 'Very weak', 'Weak', 'Moderate', 'Strong', 'Very strong', 'Painful']
 
     def __init__(self, master: tk.Widget, on_continue: Callable[[str], None]):
@@ -74,7 +74,7 @@ class InputIntensityFrame(ttk.Frame):
         self.continue_button.grid(row=2, column=0, padx=5, pady=5)
 
 
-class ExperimentCompleted(ttk.Frame):
+class ExperimentCompleted(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
         title = ttk.Label(self, text='Experiment Completed!\nThank you for participating!')

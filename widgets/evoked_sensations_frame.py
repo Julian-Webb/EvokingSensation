@@ -7,7 +7,7 @@ from typing import Callable, Any
 from .location_inputter import LocationInputter, LocationType
 
 
-class _SingleSensationFrame(ttk.Frame):
+class _SingleSensationFrame(tk.Frame):
     SENSATION_TYPES = ['Touch', 'Pulse', 'Tingling', 'Vibration', 'Cramp', 'Pain', 'Heat', 'Cold', 'Other']
     INTENSITY_OPTIONS = [i for i in range(1, 11)]
     LOCATIONS = ['D1', 'D2', 'D3', 'D4', 'S1', 'S2', 'S3', 'S4', 'S5', 'calf', 'shin']
@@ -17,12 +17,11 @@ class _SingleSensationFrame(ttk.Frame):
         :param master: The parent widget.
         :param sensation_number: The number of the sensation.
         :param on_remove: A function to call when the sensation is removed."""
-        super().__init__(master, relief='solid', borderwidth=2)
+        super().__init__(master, highlightbackground='blue', highlightthickness=2,)
 
         # Initialize tkinter vars for inputs
         self.type_var = tk.StringVar(self)
         self.intensity_var = tk.IntVar(self)
-        # todo remove?
         self.location_vars = {location: tk.BooleanVar(self, value=False) for location in self.LOCATIONS}
 
         # Header Frame (first row)
@@ -70,10 +69,6 @@ class _SingleSensationFrame(ttk.Frame):
         foot.grid(row=1, column=0, padx=5, pady=5)
         leg.grid(row=1, column=1, padx=5, pady=5)
 
-        # for idx, location in enumerate(self.LOCATIONS):
-        #     ttk.Checkbutton(location_frame, text=location, variable=self.location_vars[location],
-        #                     ).grid(row=0, column=idx + 1, padx=5, pady=5, sticky="w")
-
         # Put all the frames together
         for frame in [header_frame, type_frame, intensity_frame, location_frame]:
             frame.pack(fill='x', expand=True, padx=5, pady=5)
@@ -81,33 +76,38 @@ class _SingleSensationFrame(ttk.Frame):
     def get_sensation_data(self):
         """Access the data the participant has input for this sensation.
         :returns: A dict with the entries 'type', 'intensity', and 'locations'."""
-        # todo adjust for new location vars
         locations = [loc for loc in self.LOCATIONS if self.location_vars[loc].get()]
         return {'type': self.type_var.get(), 'intensity': self.intensity_var.get(), 'locations': locations}
 
 
-class EvokedSensationsFrame(ttk.Frame):
+class EvokedSensationsFrame(tk.Frame):
     # todo make this scrollable
     def __init__(self, master: tk.Widget, on_continue: Callable[[list[dict[str, Any]]], None], trial_number: int):
         """The Frame where the participant can add multiple evoked sensations and continue stimulation.
         :param master: The parent widget.
         :param on_continue: A function to call the participant presses continue.
         :param trial_number: The current trial number."""
-        super().__init__(master, relief='solid', borderwidth=2)
+        super().__init__(master,
+                         highlightbackground='red', highlightthickness=2,
+                         # relief='solid', borderwidth=2,
+                         )
         self.on_continue = on_continue
 
-        # The canvas where everything except the scrollbar is put
-        self.canvas = tk.Canvas(self)
-        self.main_frame = ttk.Frame(self.canvas)  # for all content except scrollbar
-        self.canvas.create_window((0, 0), window=self.main_frame, anchor='nw')
+        # The canvas is just here to enable scrolling and only contains the main_frame
+        self.canvas = tk.Canvas(self,
+                                highlightbackground='yellow', highlightthickness=2,
+                                )
+        # The main_frame contains all content except the scrollbar
+        self.main_frame = ttk.Frame(self.canvas)
+        self.window_id = self.canvas.create_window((0, 0), window=self.main_frame, anchor='n')
 
         # link canvas and scrollbar
         scrollbar = tk.Scrollbar(self, orient='vertical', command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=scrollbar.set)
         # Make the entire canvas scrollable
-        self.canvas.bind('<Configure>', lambda e: self.canvas.configure(scrollregion=self.canvas.bbox('all')))
+        self.canvas.bind('<Configure>', self._on_canvas_resize)
         # resize the scroll region when the main_frame changes size (because sensations are added / removed)
-        self.main_frame.bind('<Configure>', lambda e: self.canvas.configure(scrollregion=self.canvas.bbox('all')))
+        self.main_frame.bind('<Configure>', self._on_frame_configure)
         self.canvas.bind("<MouseWheel>", self._on_mousewheel)  # Add mousewheel scrolling
 
         self.canvas.grid(row=0, column=0, sticky='nsew')
@@ -150,6 +150,20 @@ class EvokedSensationsFrame(ttk.Frame):
         else:  # windows
             delta = -1 * int(event.delta // 120)
         self.canvas.yview_scroll(delta, "units")
+
+    def _on_canvas_resize(self, event):
+        """Handle the canvas resize events by re-centering the frame inside"""
+        canvas_width = event.width
+        self.canvas.coords(self.window_id, canvas_width / 2, 0)  # Keep y at 0
+
+    def _on_frame_configure(self, event):
+        """Update the scroll region when the frame changes size"""
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+
+        # Ensure the frame width matches the canvas
+        canvas_width = self.canvas.winfo_width()
+        if canvas_width > 1:  # Ensure canvas has been drawn
+            self.canvas.itemconfig(self.window_id, width=canvas_width)
 
     def remove_sensation(self, query_sensation_frame):
         self.sensations_frames.remove(query_sensation_frame)

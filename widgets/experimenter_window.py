@@ -45,8 +45,8 @@ class ExperimenterWindow(tk.Tk):
                       self.experiment_buttons,):
             frame.pack(padx=10, pady=10)
 
-        # self.com_port_manager.open_port()  # todo delete after testing
-        # self.on_start_experiment()  # todo delete after testing
+        self.com_port_manager.open_port()  # todo delete after testing
+        self.on_start_experiment()  # todo delete after testing
 
     def on_port_opened(self):
         """What to do when the port is successfully opened."""
