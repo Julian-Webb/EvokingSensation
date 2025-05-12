@@ -36,7 +36,9 @@ class LocationInputter(tk.Canvas):
 
     def __init__(self, master, location_type: LocationType, location_vars: dict[str, tk.BooleanVar],
                  scaling: float = 1.0):
-        super().__init__(master)
+        super().__init__(master,
+                         highlightbackground='green', highlightthickness=2,
+                         )
         self.location_vars = location_vars
         self.style = ttk.Style()
         # self.style.theme_use('clam')
