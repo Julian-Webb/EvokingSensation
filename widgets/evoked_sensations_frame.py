@@ -17,7 +17,7 @@ class _SingleSensationFrame(tk.Frame):
         :param master: The parent widget.
         :param sensation_number: The number of the sensation.
         :param on_remove: A function to call when the sensation is removed."""
-        super().__init__(master, highlightbackground='blue', highlightthickness=2,)
+        super().__init__(master, highlightbackground='blue', highlightthickness=2, )
 
         # Initialize tkinter vars for inputs
         self.type_var = tk.StringVar(self)
@@ -108,7 +108,7 @@ class EvokedSensationsFrame(tk.Frame):
         self.canvas.bind('<Configure>', self._on_canvas_resize)
         # resize the scroll region when the main_frame changes size (because sensations are added / removed)
         self.main_frame.bind('<Configure>', self._on_frame_configure)
-        self.canvas.bind("<MouseWheel>", self._on_mousewheel)  # Add mousewheel scrolling
+        # self.canvas.bind("<MouseWheel>", self._on_mousewheel)  # Add mousewheel scrolling
 
         self.canvas.grid(row=0, column=0, sticky='nsew')
         scrollbar.grid(row=0, column=1, sticky='ns')
@@ -142,14 +142,19 @@ class EvokedSensationsFrame(tk.Frame):
         add_sensation_button.pack()
         continue_button.pack()
 
-        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
-
-    def _on_mousewheel(self, event):
         if sys.platform == 'darwin':  # mac
-            delta = -1 * int(event.delta)
-        else:  # windows
-            delta = -1 * int(event.delta // 120)
-        self.canvas.yview_scroll(delta, "units")
+            on_mousewheel = self._on_mousewheel_mac
+        elif sys.platform == 'win32':  # windows
+            on_mousewheel = self._on_mousewheel_windows
+        else:
+            raise NotImplementedError(f"Unsupported platform: {sys.platform}")
+        self.canvas.bind_all("<MouseWheel>", on_mousewheel)
+
+    def _on_mousewheel_windows(self, event):
+        self.canvas.yview_scroll(-1 * int(event.delta // 120), "units")
+
+    def _on_mousewheel_mac(self, event):
+        self.canvas.yview_scroll(-1 * int(event.delta), "units")
 
     def _on_canvas_resize(self, event):
         """Handle the canvas resize events by re-centering the frame inside"""
@@ -165,29 +170,28 @@ class EvokedSensationsFrame(tk.Frame):
         if canvas_width > 1:  # Ensure canvas has been drawn
             self.canvas.itemconfig(self.window_id, width=canvas_width)
 
+    def add_sensation(self):
+        # Remove no_sensations_label if it was there before
+        if len(self.sensations_frames) == 0:
+            self.no_sensations_label.pack_forget()
+
+        new_sensation = _SingleSensationFrame(self.sensations_container, len(self.sensations_frames) + 1,
+                                              self.remove_sensation)
+        self.sensations_frames.append(new_sensation)
+        new_sensation.pack(padx=5, pady=5)
+
     def remove_sensation(self, query_sensation_frame):
         self.sensations_frames.remove(query_sensation_frame)
-        self.update_sensations()
+        query_sensation_frame.pack_forget()
         query_sensation_frame.destroy()
 
-    def add_sensation(self):
-        self.sensations_frames.append(
-            _SingleSensationFrame(self.sensations_container, len(self.sensations_frames) + 1, self.remove_sensation))
-        self.update_sensations()
+        # Update indexes of remaining sensations
+        for i, sensation_frame in enumerate(self.sensations_frames):
+            sensation_frame.title_label.config(text=f'Sensation {i + 1}')
 
-    # todo maybe delete this whole function and do it without regenerating everything!
-    def update_sensations(self):
-        """Call whenever a sensation is added or removed. Updates the QuerySensationFrames that are shown."""
-        if len(self.sensations_frames) > 0:
-            for row, sensation_frame in enumerate(self.sensations_frames):
-                sensation_frame.title_label.config(text=f'Sensation {row + 1}')
-                sensation_frame.grid(row=row, column=0, padx=5, pady=5)
-                # sensation_frame.pack(fill='x', expand=True, padx=5, pady=5)
-        else:
-            self.no_sensations_label.grid(row=0, column=0, padx=5, pady=5)
-            # self.no_sensations_label.pack(fill='x', expand=True, padx=5, pady=5)
-
-        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        # Show no_sensations_label if necessary
+        if len(self.sensations_frames) == 0:
+            self.no_sensations_label.pack(padx=5, pady=5)
 
     def get_sensations_and_continue(self):
         data = []
