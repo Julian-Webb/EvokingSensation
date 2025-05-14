@@ -29,8 +29,8 @@ class LocationInputter(tk.Canvas):
         "S5": {"x_rel": 0.259, "y_rel": 0.789, 'background': '#64A98B'}
     }
     LEG_CHECKBOXES = {
-        "calf": {"x_rel": 0.22, "y_rel": 0.6, 'background': '#FFFFFF'},
-        "shin": {"x_rel": 0.55, "y_rel": 0.6, 'background': '#FFFFFF'}
+        "Calf": {"x_rel": 0.20, "y_rel": 0.6, 'background': '#FFFFFF'},
+        "Shin": {"x_rel": 0.60, "y_rel": 0.6, 'background': '#FFFFFF'}
     }
     IMAGES_DIR = Path(__file__).parent.parent / 'images'
 
@@ -60,25 +60,26 @@ class LocationInputter(tk.Canvas):
 
         # Add all the Checkbuttons
         for name, params in checkbox_params.items():
-            self.add_checkbutton(name, params['x_rel'], params['y_rel'], params['background'])
+            self.add_checkbutton(name, _(name), params['x_rel'], params['y_rel'], params['background'])
 
-    def add_checkbutton(self, name, relx: float, rely: float, color: str):
+    def add_checkbutton(self, id, display_name, relx: float, rely: float, color: str):
         """Add a checkbutton at the specified coordinates
         :param relx: The relative x position (0-1)
         :param rely: The relative y position (0-1)
-        :param name: The checkbutton name
+        :param id: The English name of the location (e.g. "Calf")
+        :param display_name: The text that the checkbutton shows (e.g. "Calf" or "Schienbein")
         """
         assert 0 <= relx <= 1
         assert 0 <= rely <= 1
 
         var = tk.BooleanVar()
-        self.location_vars[name] = var
+        self.location_vars[id] = var
 
-        style_name = f'Custom.{name}.TCheckbutton'
+        style_name = f'Custom.{id}.TCheckbutton'
         self.style.configure(style_name, background=color, font=30,
                              indicatorbackground=color,  # make the box itself adjust to the background color
                              )
-        cb = ttk.Checkbutton(self, variable=var, text=name, style=style_name)
+        cb = ttk.Checkbutton(self, variable=var, text=display_name, style=style_name)
         cb.place(relx=relx, rely=rely, anchor='center')
 
     def get_states(self):
@@ -91,7 +92,7 @@ if __name__ == "__main__":
     root = tk.Tk()
 
     location_vars = {loc: tk.BooleanVar(value=False) for loc in
-                     ["D1", "D2", "D3", "D4", "S1", "S2", "S3", "S4", "S5", "calf", "shin", ]}
+                     ["D1", "D2", "D3", "D4", "S1", "S2", "S3", "S4", "S5", "Calf", "Shin", ]}
     LocationInputter(root, LocationType.FOOT, location_vars, scaling=0.3).pack(side='left', padx=10, pady=10)
     LocationInputter(root, LocationType.LEG, location_vars, scaling=0.3).pack(padx=10, pady=10)
 

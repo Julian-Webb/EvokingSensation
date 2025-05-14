@@ -10,7 +10,21 @@ from .location_inputter import LocationInputter, LocationType
 class _SingleSensationFrame(tk.Frame):
     SENSATION_TYPES = ['Touch', 'Pulse', 'Tingling', 'Vibration', 'Cramp', 'Pain', 'Heat', 'Cold', 'Other']
     INTENSITY_OPTIONS = [i for i in range(1, 11)]
-    LOCATIONS = ['D1', 'D2', 'D3', 'D4', 'S1', 'S2', 'S3', 'S4', 'S5', 'calf', 'shin']
+    LOCATIONS = ['D1', 'D2', 'D3', 'D4', 'S1', 'S2', 'S3', 'S4', 'S5', 'Calf', 'Shin']
+
+    # noinspection PyUnreachableCode
+    if False:  # Just so gettext realizes that these strings need to be translated
+        _('Calf')
+        _('Shin')
+        _('Touch')
+        _('Pulse')
+        _('Tingling')
+        _('Vibration')
+        _('Cramp')
+        _('Pain')
+        _('Heat')
+        _('Cold')
+        _('Other')
 
     def __init__(self, master, sensation_number: int, on_remove):
         """A Frame which lets the participant input information for a single sensation.
@@ -27,40 +41,40 @@ class _SingleSensationFrame(tk.Frame):
         # Header Frame (first row)
         header_frame = ttk.Frame(self)  # The frame at the top of this Widget
         header_frame.columnconfigure(0, weight=1)
-        self.title_label = ttk.Label(header_frame, text=f'Sensation {sensation_number}', font='bold')
+        self.title_label = ttk.Label(header_frame, text=_('Sensation {}').format(sensation_number), font='bold')
         self.title_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        remove_button = ttk.Button(header_frame, text='- Remove sensation', command=lambda: on_remove(self))
+        remove_button = ttk.Button(header_frame, text=_('- Remove sensation'), command=lambda: on_remove(self))
         remove_button.grid(row=0, column=1, padx=5, pady=5, sticky="e")
 
         # Sensation Type Frame
         type_frame = ttk.Frame(self)
-        type_label = ttk.Label(type_frame, text='Type:')
+        type_label = ttk.Label(type_frame, text=_('Type:'))
         type_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
         # Radio buttons for type
         for idx, sens_type in enumerate(self.SENSATION_TYPES):
-            ttk.Radiobutton(type_frame, text=sens_type, variable=self.type_var, value=sens_type
+            ttk.Radiobutton(type_frame, variable=self.type_var, text=_(sens_type), value=sens_type
                             ).grid(row=0, column=idx + 1, padx=5, pady=5)
 
         # Sensation Intensity Frame
         intensity_frame = ttk.Frame(self)
-        intensity_label = ttk.Label(intensity_frame, text='Intensity:')
+        intensity_label = ttk.Label(intensity_frame, text=_('Intensity:'))
         intensity_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
         # Radiobuttons for intensity
         for idx, intensity in enumerate(self.INTENSITY_OPTIONS):
             ttk.Radiobutton(intensity_frame, text=str(intensity), variable=self.intensity_var, value=intensity
                             ).grid(row=0, column=idx + 1, padx=5, pady=(5, 0))
         # labels for intensity
-        ttk.Label(intensity_frame, text='Mild', anchor='center').grid(row=1, column=1, columnspan=3,
+        ttk.Label(intensity_frame, text=_('Mild'), anchor='center').grid(row=1, column=1, columnspan=3,
                                                                       sticky='ew')
-        ttk.Label(intensity_frame, text='Moderate', anchor='center').grid(row=1, column=4, columnspan=4,
+        ttk.Label(intensity_frame, text=_('Moderate'), anchor='center').grid(row=1, column=4, columnspan=4,
                                                                           sticky='ew')
-        ttk.Label(intensity_frame, text='Strong', anchor='center').grid(row=1, column=8, columnspan=3,
+        ttk.Label(intensity_frame, text=_('Strong'), anchor='center').grid(row=1, column=8, columnspan=3,
                                                                         sticky='ew')
 
         # location frame
         location_frame = ttk.Frame(self)
-        location_label = ttk.Label(location_frame, text='Location:')
+        location_label = ttk.Label(location_frame, text=_('Location:'))
         location_label.grid(row=0, column=0, columnspan=2, padx=5, pady=(0, 5), sticky="w")
 
         # Make inputters for foot and leg
@@ -109,7 +123,6 @@ class EvokedSensationsFrame(tk.Frame):
 
         # resize the scroll region when the main_frame changes size (because sensations are added / removed)
         self.main_frame.bind('<Configure>', self._on_frame_configure)
-        canvas_center = self.canvas.winfo_width() // 2
         self.window_id = self.canvas.create_window((self.canvas.winfo_reqwidth() / 2, 0), window=self.main_frame,
                                                    anchor='n')
 
@@ -124,26 +137,27 @@ class EvokedSensationsFrame(tk.Frame):
     def _create_main_content(self, trial_number):
         """Must be called during initialization to create the main content of the Frame."""
         # Header Frame
-        header_frame = tk.Frame(self.main_frame )
+        header_frame = tk.Frame(self.main_frame)
         header_frame.columnconfigure(0, weight=1)
-        title = ttk.Label(header_frame, text='Evoked Sensations', font='bold')
-        trial_number_label = ttk.Label(header_frame, text=f'Trial {trial_number}')
+        title = ttk.Label(header_frame, text=_('Evoked Sensations'), font='bold')
+        trial_number_label = ttk.Label(header_frame, text=_('Trial {}').format(trial_number))
         title.grid(row=0, column=0, sticky="w")
         trial_number_label.grid(row=0, column=1, sticky="e")
 
         # Frame for all evoked sensations
         self.sensations_container = tk.Frame(self.main_frame)
         self.no_sensations_label = ttk.Label(self.sensations_container,
-                                             text='If you felt a sensation, please add it.\nOtherwise, continue stimulation.',
+                                             text=_(
+                                                 'If you felt a sensation, please add it.\nOtherwise, continue stimulation.'),
                                              font='bold')
         self.no_sensations_label.pack(padx=5, pady=5)
         self.sensations_frames = []
 
         # Add sensation button
-        add_sensation_button = ttk.Button(self.main_frame, text='+ Add Sensation', command=self.add_sensation)
+        add_sensation_button = ttk.Button(self.main_frame, text=_('+ Add Sensation'), command=self.add_sensation)
 
         # Continue button
-        continue_button = ttk.Button(self.main_frame, text='▶️ Continue Stimulation',
+        continue_button = ttk.Button(self.main_frame, text=_('Continue Stimulation'),
                                      command=self.get_sensations_and_continue)
 
         header_frame.pack(fill='x', expand=True, padx=5, pady=5)
@@ -188,7 +202,7 @@ class EvokedSensationsFrame(tk.Frame):
 
         # Update indexes of remaining sensations
         for i, sensation_frame in enumerate(self.sensations_frames):
-            sensation_frame.title_label.config(text=f'Sensation {i + 1}')
+            sensation_frame.title_label.config(text=_('Sensation {}').format(i + 1))
 
         # Show no_sensations_label if necessary
         if len(self.sensations_frames) == 0:

@@ -43,11 +43,21 @@ class StimulationFrame(tk.Frame):
         """The Frame to show when stimulation is ongoing"""
         super().__init__(master)
 
-        title = ttk.Label(self, text='Stimulating...')
+        title = ttk.Label(self, text=_('Stimulating...'))
         title.pack()
 
 
 class InputIntensityFrame(tk.Frame):
+    # noinspection PyUnreachableCode
+    if False: # Just so gettext realizes that these strings need to be translated
+        _('Nothing')
+        _('Very weak')
+        _('Weak')
+        _('Moderate')
+        _('Strong')
+        _('Very strong')
+        _('Painful')
+
     INTENSITY_OPTIONS = ['Nothing', 'Very weak', 'Weak', 'Moderate', 'Strong', 'Very strong', 'Painful']
 
     def __init__(self, master: tk.Widget, on_continue: Callable[[str], None]):
@@ -56,20 +66,20 @@ class InputIntensityFrame(tk.Frame):
 
         self.intensity_var = tk.StringVar(self)
 
-        title = ttk.Label(self, text='Intensity Feedback', font='bold')
+        title = ttk.Label(self, text=_('Intensity Feedback'), font='bold')
         title.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
         # radio buttons for intensity
-        intensity_label = ttk.Label(self, text='Sensation Intensity:')
+        intensity_label = ttk.Label(self, text=_('Sensation Intensity:'))
         intensity_label.grid(row=1, column=0, padx=5, pady=5, sticky="w")
 
         for idx, intensity in enumerate(self.INTENSITY_OPTIONS):
             # The command enables continuing only when a button is selected.
-            button = ttk.Radiobutton(self, text=intensity, variable=self.intensity_var, value=intensity,
+            button = ttk.Radiobutton(self, variable=self.intensity_var, text=_(intensity),  value=intensity,
                                      command=lambda: self.continue_button.config(state='normal'))
             button.grid(row=1, column=idx + 1, padx=5, pady=5)
 
-        self.continue_button = ttk.Button(self, text='▶️ Continue Stimulation', state='disabled',
+        self.continue_button = ttk.Button(self, text=_('Continue Stimulation'), state='disabled',
                                           command=lambda: on_continue(self.intensity_var.get()))
         self.continue_button.grid(row=2, column=0, padx=5, pady=5)
 
@@ -77,5 +87,5 @@ class InputIntensityFrame(tk.Frame):
 class ExperimentCompleted(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
-        title = ttk.Label(self, text='Experiment Completed!\nThank you for participating!')
+        title = ttk.Label(self, text=_('Experiment Completed!\nThank you for participating!'))
         title.pack()

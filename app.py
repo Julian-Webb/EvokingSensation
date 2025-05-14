@@ -8,7 +8,6 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     # -------------------------
 
-
     experimenter_window = ExperimenterWindow()
 
     experimenter_window.mainloop()

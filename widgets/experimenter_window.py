@@ -7,6 +7,7 @@ from typing import Callable
 from serial.tools import list_ports
 
 from backend.participant_data import ParticipantData
+from utils.locale_manager import LocaleManager
 from widgets.participant_window import ParticipantWindow
 from backend.settings import Settings
 from backend.stimulation_order import StimulationOrder
@@ -45,8 +46,8 @@ class ExperimenterWindow(tk.Tk):
                       self.experiment_buttons,):
             frame.pack(padx=10, pady=10)
 
-        self.com_port_manager.open_port()  # todo delete after testing
-        self.on_start_experiment()  # todo delete after testing
+        # self.com_port_manager.open_port()  # todo delete after testing
+        # self.on_start_experiment()  # todo delete after testing
 
     def on_port_opened(self):
         """What to do when the port is successfully opened."""
@@ -346,12 +347,20 @@ class _ExperimentButtons(ttk.Frame):
 
         self.title = ttk.Label(self, text="Experiment", font='bold')
 
+        # set up localization (different languages for the participant window)
+        self.locale_manager = LocaleManager()
+        self.language_var = tk.StringVar(value=self.locale_manager.current_locale.display_name)
+        self.locale_selector = ttk.Combobox(self, textvariable=self.language_var, state='readonly',
+                                            values=[locale.display_name for locale in
+                                                    self.locale_manager.available_locales])
+
         self.start_exp_button = ttk.Button(self, text='Start Experiment', state='disabled', command=self.on_start)
         self.stop_exp_button = ttk.Button(self, text='Stop Experiment', state='disabled', command=self.on_stop)
 
         self.title.grid(row=0, column=0, columnspan=2, padx=5, pady=5)
-        self.start_exp_button.grid(row=1, column=0, padx=5, pady=5)
-        self.stop_exp_button.grid(row=1, column=1, padx=5, pady=5)
+        self.locale_selector.grid(row=1, column=0, columnspan=2, padx=5, pady=5)
+        self.start_exp_button.grid(row=2, column=0, padx=5, pady=5)
+        self.stop_exp_button.grid(row=2, column=1, padx=5, pady=5)
 
     def enable_start(self):
         self.start_exp_button['state'] = 'normal'
@@ -360,6 +369,8 @@ class _ExperimentButtons(ttk.Frame):
         self.start_exp_button['state'] = 'disabled'
 
     def on_start(self):
+        # Set the locale for the new window
+        self.locale_manager.set_locale(self.language_var.get())
         self.on_start_experiment()
         self.start_exp_button['state'] = 'disabled'
         self.stop_exp_button.config(state='normal', style='EnabledStopButton.TButton')

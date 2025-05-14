@@ -14,13 +14,13 @@ class ParticipantWindow(tk.Toplevel):
         super().__init__(master)
         self.stimulator, self.stim_order, self.participant_data = stimulator, stim_order, participant_data
 
-        self.title('Participant View')
+        self.title(_('Participant View'))
         self._initialize_window_position()
 
         # disabled closing the window
         self.protocol("WM_DELETE_WINDOW",
-                      lambda: messagebox.showinfo("Not closable",
-                                                  "This window must be closed in the experimenter view"))
+                      lambda: messagebox.showinfo(_("Not closable"),
+                                                  _("This window must be closed in the experimenter view")))
 
         self.current_frame = CalibrationPhase(self, stimulator, self.participant_data, self.start_sense_phase, )
         self.current_frame.grid(row=0, column=0, sticky='nsew')
@@ -28,8 +28,8 @@ class ParticipantWindow(tk.Toplevel):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
 
-        self.start_sense_phase()  # todo delete after testing
-        self.current_frame.query_after_stimulation()  # todo delete after testing
+        # self.start_sense_phase()  # todo delete after testing
+        # self.current_frame.query_after_stimulation()  # todo delete after testing
 
     def _initialize_window_position(self):
         """Positions the window on the right side of the screen."""

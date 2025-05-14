@@ -59,7 +59,9 @@ class CalibrationPhase(_BasePhase):
         """The Frame for the calibration phase where the participant can adjust the amplitude of the stimulation."""
         super().__init__(master, stimulator, participant_data)
         self.on_end_of_phase = on_phase_over
-        self.show_frame(TextAndButtonFrame(self, 'Calibration Phase', '▶️ Start Stimulation', self.start_countdown))
+        self.show_frame(
+            TextAndButtonFrame(self, title_text=_('Calibration Phase'), button_text=_('Start Stimulation'),
+                               command=self.start_countdown))
 
     @override
     def stimulate(self):
@@ -115,8 +117,8 @@ class CalibrationPhase(_BasePhase):
             self.start_countdown()
         else:
             # We've reached our target intensity and the calibration phase is over.
-            self.show_frame(TextAndButtonFrame(self, 'Calibration Phase Completed!',
-                                               'Continue to sensory response phase', self.on_end_of_phase))
+            self.show_frame(TextAndButtonFrame(self, _('Calibration Phase Completed!'),
+                                               _('Continue to sensory response phase'), self.on_end_of_phase))
 
 
 class SensoryPhase(_BasePhase):
@@ -124,8 +126,8 @@ class SensoryPhase(_BasePhase):
         """The Frame for the sensory phase"""
         super().__init__(master, stimulator, participant_data)
         self.stim_order = stim_order
-        self.show_frame(TextAndButtonFrame(self, 'Sensory Response Phase',
-                                           '▶️ Start Stimulation', self.start_countdown))
+        self.show_frame(TextAndButtonFrame(self, _('Sensory Response Phase'),
+                                           _('Start Stimulation'), self.start_countdown))
 
     @override
     def stimulate(self):
@@ -163,8 +165,8 @@ class SensoryPhase(_BasePhase):
 
     def on_end_of_block(self):
         # TODO show block number and add forced pause
-        self.show_frame(TextAndButtonFrame(self, 'Block Completed! Time for a 5 minute break',
-                                           'Continue stimulation', self.start_countdown))
+        self.show_frame(TextAndButtonFrame(self, _('Block Completed! Time for a 5 minute break'),
+                                           _('Continue stimulation'), self.start_countdown))
 
     @override
     def on_end_of_phase(self):
