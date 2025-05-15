@@ -46,8 +46,8 @@ class ExperimenterWindow(tk.Tk):
                       self.experiment_buttons,):
             frame.pack(padx=10, pady=10)
 
-        # self.com_port_manager.open_port()  # todo delete after testing
-        # self.on_start_experiment()  # todo delete after testing
+        self.com_port_manager.open_port()  # todo delete after testing
+        self.on_start_experiment()  # todo delete after testing
 
     def on_port_opened(self):
         """What to do when the port is successfully opened."""
@@ -371,11 +371,14 @@ class _ExperimentButtons(ttk.Frame):
     def on_start(self):
         # Set the locale for the new window
         self.locale_manager.set_locale(self.language_var.get())
+        self.locale_selector['state'] = 'disabled'
+
         self.on_start_experiment()
         self.start_exp_button['state'] = 'disabled'
         self.stop_exp_button.config(state='normal', style='EnabledStopButton.TButton')
 
     def on_stop(self):
         self.on_stop_experiment()
+        self.locale_selector['state'] = 'normal'
         self.start_exp_button['state'] = 'normal'
         self.stop_exp_button.config(state='disabled', style='TButton')

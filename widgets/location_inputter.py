@@ -72,14 +72,11 @@ class LocationInputter(tk.Canvas):
         assert 0 <= relx <= 1
         assert 0 <= rely <= 1
 
-        var = tk.BooleanVar()
-        self.location_vars[id] = var
-
         style_name = f'Custom.{id}.TCheckbutton'
         self.style.configure(style_name, background=color, font=30,
                              indicatorbackground=color,  # make the box itself adjust to the background color
                              )
-        cb = ttk.Checkbutton(self, variable=var, text=display_name, style=style_name)
+        cb = ttk.Checkbutton(self, variable=self.location_vars[id], text=display_name, style=style_name)
         cb.place(relx=relx, rely=rely, anchor='center')
 
     def get_states(self):

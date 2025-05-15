@@ -5,7 +5,8 @@ from tkinter import ttk
 from typing import Callable, Any
 
 from .location_inputter import LocationInputter, LocationType
-
+import gettext
+_ = gettext.gettext  # todo does this break everything?
 
 class _SingleSensationFrame(tk.Frame):
     SENSATION_TYPES = ['Touch', 'Pulse', 'Tingling', 'Vibration', 'Cramp', 'Pain', 'Heat', 'Cold', 'Other']
@@ -26,7 +27,7 @@ class _SingleSensationFrame(tk.Frame):
         _('Cold')
         _('Other')
 
-    def __init__(self, master, sensation_number: int, on_remove):
+    def __init__(self, master, sensation_number: int, on_remove: Callable, on_input_callback: Callable):
         """A Frame which lets the participant input information for a single sensation.
         :param master: The parent widget.
         :param sensation_number: The number of the sensation.
@@ -37,6 +38,11 @@ class _SingleSensationFrame(tk.Frame):
         self.type_var = tk.StringVar(self)
         self.intensity_var = tk.IntVar(self)
         self.location_vars = {location: tk.BooleanVar(self, value=False) for location in self.LOCATIONS}
+
+        # Link changes in the variables to on_input_callback
+        for var in [self.type_var, self.intensity_var] + list(self.location_vars.values()):
+            print(var)
+            var.trace_add('write', on_input_callback)
 
         # Header Frame (first row)
         header_frame = ttk.Frame(self)  # The frame at the top of this Widget
@@ -66,11 +72,11 @@ class _SingleSensationFrame(tk.Frame):
                             ).grid(row=0, column=idx + 1, padx=5, pady=(5, 0))
         # labels for intensity
         ttk.Label(intensity_frame, text=_('Mild'), anchor='center').grid(row=1, column=1, columnspan=3,
-                                                                      sticky='ew')
+                                                                         sticky='ew')
         ttk.Label(intensity_frame, text=_('Moderate'), anchor='center').grid(row=1, column=4, columnspan=4,
-                                                                          sticky='ew')
+                                                                             sticky='ew')
         ttk.Label(intensity_frame, text=_('Strong'), anchor='center').grid(row=1, column=8, columnspan=3,
-                                                                        sticky='ew')
+                                                                           sticky='ew')
 
         # location frame
         location_frame = ttk.Frame(self)
@@ -87,11 +93,16 @@ class _SingleSensationFrame(tk.Frame):
         for frame in [header_frame, type_frame, intensity_frame, location_frame]:
             frame.pack(fill='x', expand=True, padx=5, pady=5)
 
-    def get_sensation_data(self):
+    def get_sensation_data(self) -> dict[str, Any]:
         """Access the data the participant has input for this sensation.
         :returns: A dict with the entries 'type', 'intensity', and 'locations'."""
         locations = [loc for loc in self.LOCATIONS if self.location_vars[loc].get()]
         return {'type': self.type_var.get(), 'intensity': self.intensity_var.get(), 'locations': locations}
+
+    def all_inputs_filled(self) -> bool:
+        """Check if all inputs have been filled in."""
+        return self.type_var.get() != '' and self.intensity_var.get() != '' and any(
+            self.location_vars[loc].get() for loc in self.LOCATIONS)
 
 
 class EvokedSensationsFrame(tk.Frame):
@@ -157,13 +168,13 @@ class EvokedSensationsFrame(tk.Frame):
         add_sensation_button = ttk.Button(self.main_frame, text=_('+ Add Sensation'), command=self.add_sensation)
 
         # Continue button
-        continue_button = ttk.Button(self.main_frame, text=_('Continue Stimulation'),
-                                     command=self.get_sensations_and_continue)
+        self.continue_button = ttk.Button(self.main_frame, text=_('Continue Stimulation'),
+                                          command=self.get_sensations_and_continue)
 
         header_frame.pack(fill='x', expand=True, padx=5, pady=5)
         self.sensations_container.pack(padx=5, pady=5)
         add_sensation_button.pack()
-        continue_button.pack()
+        self.continue_button.pack()
 
     def _on_mousewheel_windows(self, event):
         self.canvas.yview_scroll(-1 * int(event.delta // 120), "units")
@@ -191,9 +202,12 @@ class EvokedSensationsFrame(tk.Frame):
             self.no_sensations_label.pack_forget()
 
         new_sensation = _SingleSensationFrame(self.sensations_container, len(self.sensations_frames) + 1,
-                                              self.remove_sensation)
+                                              self.remove_sensation, self.check_complete_inputs)
         self.sensations_frames.append(new_sensation)
         new_sensation.pack(padx=5, pady=5)
+
+        # Disabled continue button because you should only be able to continue when all inputs have been filled in
+        self.continue_button.config(state='disabled')
 
     def remove_sensation(self, query_sensation_frame):
         self.sensations_frames.remove(query_sensation_frame)
@@ -207,6 +221,16 @@ class EvokedSensationsFrame(tk.Frame):
         # Show no_sensations_label if necessary
         if len(self.sensations_frames) == 0:
             self.no_sensations_label.pack(padx=5, pady=5)
+
+    def check_complete_inputs(self, *args):
+        """Enable the continue button if all sensations have been filled in and disable if not.
+        Should be called every time an input is given."""
+        # Check if all inputs have been provided
+        for sensation in self.sensations_frames:
+            if not sensation.all_inputs_filled():
+                self.continue_button.config(state='disabled')
+                return
+        self.continue_button.config(state='normal')
 
     def get_sensations_and_continue(self):
         data = []

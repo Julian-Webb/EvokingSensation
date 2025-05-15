@@ -28,8 +28,8 @@ class ParticipantWindow(tk.Toplevel):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
 
-        # self.start_sense_phase()  # todo delete after testing
-        # self.current_frame.query_after_stimulation()  # todo delete after testing
+        self.start_sense_phase()  # todo delete after testing
+        self.current_frame.query_after_stimulation()  # todo delete after testing
 
     def _initialize_window_position(self):
         """Positions the window on the right side of the screen."""
