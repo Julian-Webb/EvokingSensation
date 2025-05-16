@@ -1,0 +1,203 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-05-16 20:16+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: widgets/evoked_sensations_frame.py:17
+msgid "Calf"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:18
+msgid "Shin"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:19
+msgid "Touch"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:20
+msgid "Pulse"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:21
+msgid "Tingling"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:22
+msgid "Vibration"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:23
+msgid "Cramp"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:24
+msgid "Pain"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:25
+msgid "Heat"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:26
+msgid "Cold"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:27
+msgid "Other"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:48
+#: widgets/evoked_sensations_frame.py:235
+msgid "Sensation {}"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:51
+msgid "- Remove sensation"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:57
+msgid "Type:"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:67
+msgid "Intensity:"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:74
+msgid "Mild"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:76 widgets/phase_frames.py:58
+msgid "Moderate"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:78 widgets/phase_frames.py:59
+msgid "Strong"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:83
+msgid "Location:"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:165
+msgid "Evoked Sensations"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:166
+msgid "Trial {} of {}"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:175
+msgid ""
+"If you felt a sensation, please add it.\n"
+"Otherwise, continue stimulation."
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:181
+msgid "+ Add Sensation"
+msgstr ""
+
+#: widgets/evoked_sensations_frame.py:186 widgets/phase_frames.py:84
+msgid "Continue Stimulation"
+msgstr ""
+
+#: widgets/participant_window.py:17
+msgid "Participant View"
+msgstr ""
+
+#: widgets/participant_window.py:24
+msgid "Not closable"
+msgstr ""
+
+#: widgets/participant_window.py:25
+msgid "This window must be closed in the experimenter view"
+msgstr ""
+
+#: widgets/phase_frames.py:48
+msgid "Stimulating..."
+msgstr ""
+
+#: widgets/phase_frames.py:55
+msgid "Nothing"
+msgstr ""
+
+#: widgets/phase_frames.py:56
+msgid "Very weak"
+msgstr ""
+
+#: widgets/phase_frames.py:57
+msgid "Weak"
+msgstr ""
+
+#: widgets/phase_frames.py:60
+msgid "Very strong"
+msgstr ""
+
+#: widgets/phase_frames.py:61
+msgid "Painful"
+msgstr ""
+
+#: widgets/phase_frames.py:71
+msgid "Intensity Feedback"
+msgstr ""
+
+#: widgets/phase_frames.py:75
+msgid "Sensation Intensity:"
+msgstr ""
+
+#: widgets/phase_frames.py:95
+msgid "Experiment Complete"
+msgstr ""
+
+#: widgets/phase_frames.py:96
+msgid ""
+"Thank you for participating!\n"
+"\n"
+"This window can be safely closed now."
+msgstr ""
+
+#: widgets/phases.py:61
+msgid "Calibration Phase"
+msgstr ""
+
+#: widgets/phases.py:61 widgets/phases.py:128
+msgid "Start Stimulation"
+msgstr ""
+
+#: widgets/phases.py:118
+msgid "Calibration Phase Completed!"
+msgstr ""
+
+#: widgets/phases.py:119
+msgid "Continue to sensory response phase"
+msgstr ""
+
+#: widgets/phases.py:127
+msgid "Sensory Response Phase"
+msgstr ""
+
+#: widgets/phases.py:168
+msgid "Block {} of {} Completed"
+msgstr ""
+
+#: widgets/phases.py:169
+msgid "Continue stimulation"
+msgstr ""
+
+#: widgets/phases.py:170
+msgid "Time for a 5 minute break"
+msgstr ""

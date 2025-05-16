@@ -5,13 +5,13 @@ from typing import Callable
 
 
 class TextAndButtonFrame(tk.Frame):
-    def __init__(self, master, title_text: str, button_text: str, command: Callable):
+    def __init__(self, master, title_text: str, button_text: str, command: Callable, body_text: str = '', ):
         super().__init__(master)
-        title = ttk.Label(self, text=title_text, font='bold')
-        title.pack()
+        ttk.Label(self, text=title_text, style='Heading1.TLabel').pack(pady=(40, 20))
 
-        continue_button = ttk.Button(self, text=button_text, command=command)
-        continue_button.pack()
+        if body_text != '':
+            ttk.Label(self, text=body_text).pack(pady=20)
+        ttk.Button(self, text=button_text, padding=(20, 20), command=command).pack(padx=20, pady=20)
 
 
 class CountdownFrame(tk.Frame):
@@ -21,8 +21,10 @@ class CountdownFrame(tk.Frame):
         self.duration_var = tk.IntVar(self, value=duration)
         self.on_finish = on_finish
 
-        self.duration_label = ttk.Label(self, textvariable=self.duration_var)
-        self.duration_label.pack()
+        self.duration_label = ttk.Label(self, textvariable=self.duration_var, style='Heading2.TLabel')
+        # todo center widget
+        self.duration_label.pack(pady=(100, 0))
+        # self.duration_label.place(relx=0.5, rely=0.5, anchor='center')
 
     def start_countdown(self):
         self.after(1000, self._countdown, [])  # empty list for unused *args
@@ -43,13 +45,13 @@ class StimulationFrame(tk.Frame):
         """The Frame to show when stimulation is ongoing"""
         super().__init__(master)
 
-        title = ttk.Label(self, text=_('Stimulating...'))
-        title.pack()
+        title = ttk.Label(self, text=_('Stimulating...'), style='Heading2.TLabel')
+        title.pack(pady=(100, 0))
 
 
 class InputIntensityFrame(tk.Frame):
     # noinspection PyUnreachableCode
-    if False: # Just so gettext realizes that these strings need to be translated
+    if False:  # Just so gettext realizes that these strings need to be translated
         _('Nothing')
         _('Very weak')
         _('Weak')
@@ -66,26 +68,31 @@ class InputIntensityFrame(tk.Frame):
 
         self.intensity_var = tk.StringVar(self)
 
-        title = ttk.Label(self, text=_('Intensity Feedback'), font='bold')
-        title.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        title = ttk.Label(self, text=_('Intensity Feedback'), style='Heading1.TLabel')
 
         # radio buttons for intensity
-        intensity_label = ttk.Label(self, text=_('Sensation Intensity:'))
-        intensity_label.grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        intensity_frame = ttk.Frame(self)
+        intensity_label = ttk.Label(intensity_frame, text=_('Sensation Intensity:'), style='Bold.TLabel')
+        intensity_label.grid(row=0, column=0, padx=(0, 5), pady=10, sticky="w")
 
         for idx, intensity in enumerate(self.INTENSITY_OPTIONS):
             # The command enables continuing only when a button is selected.
-            button = ttk.Radiobutton(self, variable=self.intensity_var, text=_(intensity),  value=intensity,
+            button = ttk.Radiobutton(intensity_frame, variable=self.intensity_var, text=_(intensity), value=intensity,
                                      command=lambda: self.continue_button.config(state='normal'))
-            button.grid(row=1, column=idx + 1, padx=5, pady=5)
+            button.grid(row=0, column=1 + idx, padx=5, pady=5, sticky='w')
 
-        self.continue_button = ttk.Button(self, text=_('Continue Stimulation'), state='disabled',
+        self.continue_button = ttk.Button(self, text='▶ ' + _('Continue Stimulation'), state='disabled', padding=20,
                                           command=lambda: on_continue(self.intensity_var.get()))
-        self.continue_button.grid(row=2, column=0, padx=5, pady=5)
+        # Arrange objects
+        title.grid(row=0, column=0, padx=20, pady=20, sticky="w")
+        intensity_frame.grid(row=1, column=0, padx=20, pady=20, sticky="w")
+        self.continue_button.grid(row=2, column=0, padx=(20, 5), pady=(20, 0), sticky='w')
 
 
 class ExperimentCompleted(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
-        title = ttk.Label(self, text=_('Experiment Completed!\nThank you for participating!'))
-        title.pack()
+        title = ttk.Label(self, text=_('Experiment Complete'), style='Heading1.TLabel')
+        body = ttk.Label(self, text=_('Thank you for participating!\n\nThis window can be safely closed now.'))
+        title.pack(pady=10)
+        body.pack(pady=10)

@@ -1,6 +1,6 @@
 import time
 from sciencemode import sciencemode as sm
-from utils.utils import waiting_dots_animation
+from backend.utils import waiting_dots_animation
 
 # --- Variables ---
 port: bytes = b"COM5"

@@ -6,8 +6,9 @@ from typing import Callable
 
 from serial.tools import list_ports
 
+from styling.app_style import AppStyle
 from backend.participant_data import ParticipantData
-from utils.locale_manager import LocaleManager
+from backend.locale_manager import LocaleManager
 from widgets.participant_window import ParticipantWindow
 from backend.settings import Settings
 from backend.stimulation_order import StimulationOrder
@@ -17,6 +18,8 @@ from backend.stimulator import Stimulator, SerialPortError
 class ExperimenterWindow(tk.Tk):
     def __init__(self):
         super().__init__()
+        # set up style
+        self.style = AppStyle()
 
         self.stim_order = StimulationOrder.from_file(Settings().get_stim_order_path())
         self.participant_data = None
@@ -25,10 +28,6 @@ class ExperimenterWindow(tk.Tk):
         self.resizable(False, False)
 
         self.participant_window = None
-
-        # Define a custom style for the stop button
-        style = ttk.Style(self)
-        style.configure("EnabledStopButton.TButton", background="red", foreground="red")
 
         self.stimulator = Stimulator(self)
 
@@ -46,8 +45,8 @@ class ExperimenterWindow(tk.Tk):
                       self.experiment_buttons,):
             frame.pack(padx=10, pady=10)
 
-        self.com_port_manager.open_port()  # todo delete after testing
-        self.on_start_experiment()  # todo delete after testing
+        # self.com_port_manager.open_port()  # todo delete after testing
+        # self.on_start_experiment()  # todo delete after testing
 
     def on_port_opened(self):
         """What to do when the port is successfully opened."""
@@ -168,13 +167,17 @@ class _ParameterManager(ttk.Frame):
         super().__init__(master, borderwidth=2, relief="solid")
         self.spinboxes = {}
 
+        # title
+        ttk.Label(self, text="Parameters", style='Heading3.TLabel').grid(row=0, column=0, columnspan=3, padx=5, pady=5)
         # Create labels and spin boxes
-        row = 0  # So PyCharm doesn't complain about the row possibly not being initialized below
-        for row, parameter in enumerate(Settings.PARAMETER_OPTIONS):
+        row = 1
+        for parameter in Settings.PARAMETER_OPTIONS:
             po = Settings.PARAMETER_OPTIONS[parameter]  # po = parameter options
 
-            label = ttk.Label(self, text=po['label'])
-            label.grid(row=row, column=0, padx=5, pady=5, sticky="w")
+            # parameter name label
+            ttk.Label(self, text=po['label']).grid(row=row, column=0, padx=5, pady=5, sticky="w")
+            # unit label
+            ttk.Label(self, text=po['unit']).grid(row=row, column=2, pady=5, sticky="w")
 
             # Validation command
             validation_cmd = (
@@ -182,6 +185,7 @@ class _ParameterManager(ttk.Frame):
 
             invalid_cmd = (self.register(self._on_invalid_input), parameter)
             spinbox = ttk.Spinbox(self,
+                                  width=10,
                                   from_=po['range'][0], to=po['range'][1], increment=po['increment'],
                                   validate='focusout',
                                   validatecommand=validation_cmd,
@@ -190,14 +194,18 @@ class _ParameterManager(ttk.Frame):
             spinbox.grid(row=row, column=1, padx=5, pady=5)
 
             self.spinboxes[parameter] = spinbox
+            row += 1
 
         # Add the field to display the period
         row += 1
-        ttk.Separator(self, orient="horizontal").grid(row=row, column=0, columnspan=2, sticky="ew", pady=5)
-        period_label = ttk.Label(self, text="Period (ms)")
-        period_label.grid(row=row + 1, column=0, padx=5, pady=5, sticky="w")
-        period_field = ttk.Label(self, textvariable=Settings().period_string_var)
-        period_field.grid(row=row + 1, column=1, padx=5, pady=5)
+        ttk.Separator(self, orient="horizontal").grid(row=row, column=0, columnspan=3, sticky="ew", pady=5)
+        row += 1
+        # period name label
+        ttk.Label(self, text="Period").grid(row=row, column=0, padx=5, pady=5, sticky="w")
+        # period value label
+        ttk.Label(self, textvariable=Settings().period_string_var).grid(row=row, column=1, padx=5, pady=5, sticky="w")
+        # period unit label
+        ttk.Label(self, text="ms").grid(row=row, column=2, pady=5, sticky="w")
 
     @staticmethod
     def _on_invalid_input(parameter: str):
@@ -282,14 +290,14 @@ class _StimulationButtons(ttk.Frame):
         self.on_start_callback = on_start_callback
         self.on_stop_callback = on_stop_callback
 
-        self.title = ttk.Label(self, text="Test Stimulation", font='bold')
+        self.title = ttk.Label(self, text="Test Stimulation", style='Heading3.TLabel')
         self.title.grid(row=0, column=0, columnspan=2, padx=5, pady=5)
 
-        self.start_button = ttk.Button(self, text="Start Stimulation", state='disabled', command=self._on_start)
+        self.start_button = ttk.Button(self, text="▶ Start Stimulation", state='disabled', command=self._on_start)
 
         self.start_button.grid(row=1, column=0, padx=5, pady=5)
 
-        self.stop_button = ttk.Button(self, text='Stop Stimulation', state='disabled', command=self._on_manual_stop)
+        self.stop_button = ttk.Button(self, text='🟥 Stop Stimulation', state='disabled', command=self._on_manual_stop)
         self.stop_button.grid(row=1, column=1, padx=5, pady=5)
 
         self.timer = _Timer(self)
@@ -345,7 +353,7 @@ class _ExperimentButtons(ttk.Frame):
         self.on_start_experiment = on_start_experiment
         self.on_stop_experiment = on_stop_experiment
 
-        self.title = ttk.Label(self, text="Experiment", font='bold')
+        self.title = ttk.Label(self, text="Experiment", style='Heading3.TLabel')
 
         # set up localization (different languages for the participant window)
         self.locale_manager = LocaleManager()
@@ -354,8 +362,8 @@ class _ExperimentButtons(ttk.Frame):
                                             values=[locale.display_name for locale in
                                                     self.locale_manager.available_locales])
 
-        self.start_exp_button = ttk.Button(self, text='Start Experiment', state='disabled', command=self.on_start)
-        self.stop_exp_button = ttk.Button(self, text='Stop Experiment', state='disabled', command=self.on_stop)
+        self.start_exp_button = ttk.Button(self, text='▶ Start Experiment', state='disabled', command=self.on_start)
+        self.stop_exp_button = ttk.Button(self, text='🟥 Stop Experiment', state='disabled', command=self.on_stop)
 
         self.title.grid(row=0, column=0, columnspan=2, padx=5, pady=5)
         self.locale_selector.grid(row=1, column=0, columnspan=2, padx=5, pady=5)
@@ -379,6 +387,6 @@ class _ExperimentButtons(ttk.Frame):
 
     def on_stop(self):
         self.on_stop_experiment()
-        self.locale_selector['state'] = 'normal'
+        self.locale_selector['state'] = 'readonly'
         self.start_exp_button['state'] = 'normal'
         self.stop_exp_button.config(state='disabled', style='TButton')

@@ -5,4 +5,6 @@
 
 * The channel should be moved to the stimulation buttons
 
+* delete azure theme
+
 

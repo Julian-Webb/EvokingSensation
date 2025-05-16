@@ -1,7 +1,7 @@
 import unittest
 import tkinter as tk
 
-from utils.locale_manager import LocaleManager
+from backend.locale_manager import LocaleManager
 from widgets.evoked_sensations_frame import EvokedSensationsFrame, _SingleSensationFrame
 
 LocaleManager().set_locale('German')
@@ -9,7 +9,7 @@ LocaleManager().set_locale('German')
 
 class TestEvokedSensationsFrame(unittest.TestCase):
     def test_check_complete_inputs(self):
-        es_frame = EvokedSensationsFrame(tk.Frame(), lambda _: None, 1)
+        es_frame = EvokedSensationsFrame(tk.Frame(), lambda _: None, 1, 2)
 
         # continue button enabled when no sensations are entered
         self.assertEqual(str(es_frame.continue_button['state']), 'normal', 'continue button should be enabled initially')

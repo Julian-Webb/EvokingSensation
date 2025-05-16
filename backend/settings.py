@@ -20,23 +20,26 @@ class Settings:
     """
     _instance = None
 
+    # Countdown duration before stimulation
+    COUNTDOWN_DURATION = 1  # todo change to 3
+
     PARAMETER_OPTIONS = OrderedDict(
         {
-            'channel': {'label': 'Channel (testing only)', 'range': (1, 8), 'increment': 1, 'numeric_type': int,
-                        'default': 1},
-            'amplitude': {'label': 'Amplitude (mA)', 'range': (0.5, 11), 'increment': 0.5, 'numeric_type': float,
-                          'default': 2.0},
-            'phase_duration': {'label': 'Phase duration (µs)', 'range': (1, 1000), 'increment': 50, 'numeric_type': int,
-                               'default': 700},
-            'interphase_interval': {'label': 'Interphase interval (µs)', 'range': (1, 1000), 'increment': 50,
-                                    'numeric_type': int, 'default': 500},
-            'stim_duration': {'label': 'Stimulation Duration (s)', 'range': (0.1, 240), 'increment': 1,
-                              'numeric_type': float,
+            'channel': {'label': 'Channel (testing only)', 'unit': '',
+                        'range': (1, 8), 'increment': 1, 'numeric_type': int, 'default': 1},
+            'amplitude': {'label': 'Amplitude', 'unit': 'mA',
+                          'range': (0.5, 11), 'increment': 0.5, 'numeric_type': float, 'default': 2.0},
+            'phase_duration': {'label': 'Phase duration', 'unit': 'µs',
+                               'range': (1, 1000), 'increment': 50, 'numeric_type': int, 'default': 700},
+            'interphase_interval': {'label': 'Interphase interval', 'unit': 'µs',
+                                    'range': (1, 1000), 'increment': 50, 'numeric_type': int, 'default': 500},
+            'stim_duration': {'label': 'Stimulation Duration', 'unit': 's',
+                              'range': (0.1, 240), 'increment': 1, 'numeric_type': float,
                               # 'default': 5
                               'default': 0.1  # todo change back
                               },
-            'frequency': {'label': 'Frequency (Hz)', 'range': (1, 1000), 'increment': 1.0, 'numeric_type': float,
-                          'default': 50.0},
+            'frequency': {'label': 'Frequency', 'unit': 'Hz',
+                          'range': (1, 1000), 'increment': 1.0, 'numeric_type': float, 'default': 50.0},
         }
     )
 

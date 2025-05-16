@@ -15,7 +15,9 @@ class ParticipantWindow(tk.Toplevel):
         self.stimulator, self.stim_order, self.participant_data = stimulator, stim_order, participant_data
 
         self.title(_('Participant View'))
-        self._initialize_window_position()
+
+        self.state('zoomed')  # Make the window fullscreen
+        self.minsize(1200, 900)
 
         # disabled closing the window
         self.protocol("WM_DELETE_WINDOW",
@@ -28,27 +30,8 @@ class ParticipantWindow(tk.Toplevel):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
 
-        self.start_sense_phase()  # todo delete after testing
-        self.current_frame.query_after_stimulation()  # todo delete after testing
-
-    def _initialize_window_position(self):
-        """Positions the window on the right side of the screen."""
-        # Get the screen width and height
-        screen_width = self.winfo_screenwidth()
-        screen_height = self.winfo_screenheight()
-
-        # Set window size
-        window_width = 1000
-        window_height = 1000
-
-        # Calculate the position for the participant window
-        # (placing it on the right side of the screen)
-        x_position = int(screen_width / 2) - 400
-        # y_position = int((screen_height - window_height) / 2)
-        y_position = 0
-
-        # Set the window geometry to position it
-        self.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
+        # self.start_sense_phase()  # todo delete after testing
+        # self.current_frame.query_after_stimulation()  # todo delete after testing
 
     def start_sense_phase(self):
         logging.info('--- Sensory Phase ---')

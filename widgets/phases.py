@@ -10,8 +10,6 @@ from backend.participant_data import ParticipantData
 from .evoked_sensations_frame import EvokedSensationsFrame
 from .phase_frames import *
 
-_COUNTDOWN_DURATION = 1  # todo change to 3
-
 
 class _BasePhase(tk.Frame):
     def __init__(self, master, stimulator: Stimulator, participant_data: ParticipantData):
@@ -29,7 +27,7 @@ class _BasePhase(tk.Frame):
         self.columnconfigure(0, weight=1)
 
     def start_countdown(self):
-        countdown_frame = CountdownFrame(self, _COUNTDOWN_DURATION, self.stimulate)
+        countdown_frame = CountdownFrame(self, Settings.COUNTDOWN_DURATION, self.stimulate)
         self.show_frame(countdown_frame)
         countdown_frame.start_countdown()
 
@@ -60,7 +58,7 @@ class CalibrationPhase(_BasePhase):
         super().__init__(master, stimulator, participant_data)
         self.on_end_of_phase = on_phase_over
         self.show_frame(
-            TextAndButtonFrame(self, title_text=_('Calibration Phase'), button_text=_('Start Stimulation'),
+            TextAndButtonFrame(self, title_text=_('Calibration Phase'), button_text='▶ ' + _('Start Stimulation'),
                                command=self.start_countdown))
 
     @override
@@ -127,7 +125,7 @@ class SensoryPhase(_BasePhase):
         super().__init__(master, stimulator, participant_data)
         self.stim_order = stim_order
         self.show_frame(TextAndButtonFrame(self, _('Sensory Response Phase'),
-                                           _('Start Stimulation'), self.start_countdown))
+                                           '▶ ' + _('Start Stimulation'), self.start_countdown))
 
     @override
     def stimulate(self):
@@ -141,7 +139,8 @@ class SensoryPhase(_BasePhase):
     @override
     def query_after_stimulation(self):
         self.show_frame(EvokedSensationsFrame(self, on_continue=self.on_continue_after_querying,
-                                              trial_number=self.stim_order.current_trial().trial))
+                                              trial_number=self.stim_order.current_trial().trial,
+                                              trials_in_block=self.stim_order.n_trials_in_current_block()))
 
     @override
     def on_continue_after_querying(self, sensations: list[dict[str, Any]]):
@@ -158,15 +157,17 @@ class SensoryPhase(_BasePhase):
             self.on_end_of_phase()
         elif old_trial_info.block != new_trial_info.block:
             # End of block
-            self.on_end_of_block()
+            # The completed block number is passed because it will show "Block n completed"
+            self.on_end_of_block(old_trial_info.block, self.stim_order.n_blocks())
         else:
             # Regular trial
             self.start_countdown()
 
-    def on_end_of_block(self):
-        # TODO show block number and add forced pause
-        self.show_frame(TextAndButtonFrame(self, _('Block Completed! Time for a 5 minute break'),
-                                           _('Continue stimulation'), self.start_countdown))
+    def on_end_of_block(self, completed_block_number: int, n_blocks: int):
+        # TODO add forced pause
+        self.show_frame(TextAndButtonFrame(self, _('Block {} of {} Completed').format(completed_block_number, n_blocks),
+                                           '▶ ' + _('Continue stimulation'), self.start_countdown,
+                                           _('Time for a 5 minute break')))
 
     @override
     def on_end_of_phase(self):
