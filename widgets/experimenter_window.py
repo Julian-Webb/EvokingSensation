@@ -1,8 +1,9 @@
 import logging
 import time
 import tkinter as tk
-from tkinter import ttk, messagebox
-from typing import Callable
+import traceback
+from tkinter import ttk, messagebox, filedialog
+from typing import Callable, Optional
 
 from serial.tools import list_ports
 
@@ -21,7 +22,6 @@ class ExperimenterWindow(tk.Tk):
         # set up style
         self.style = AppStyle()
 
-        self.stim_order = StimulationOrder.from_file(Settings().get_stim_order_path())
         self.participant_data = None
 
         self.title("Experimenter View")
@@ -39,10 +39,10 @@ class ExperimenterWindow(tk.Tk):
                                                 on_successful_init=self.on_port_opened,
                                                 on_close_port=self.on_port_closed)
 
-        self.experiment_buttons = _ExperimentButtons(self, self.on_start_experiment, self.on_stop_experiment)
+        self.experiment_manager = _ExperimentManager(self, self.on_start_experiment, self.on_stop_experiment)
 
         for frame in (self.com_port_manager, self.stimulation_buttons, self.parameter_manager,
-                      self.experiment_buttons,):
+                      self.experiment_manager,):
             frame.pack(padx=10, pady=10)
 
         # self.com_port_manager.open_port()  # todo delete after testing
@@ -51,12 +51,12 @@ class ExperimenterWindow(tk.Tk):
     def on_port_opened(self):
         """What to do when the port is successfully opened."""
         self.stimulation_buttons.enable_start()
-        self.experiment_buttons.enable_start()
+        self.experiment_manager.enable_start()
 
     def on_port_closed(self):
         """What to do when the port is closed."""
         self.stimulation_buttons.disable_buttons()
-        self.experiment_buttons.disable_start()
+        self.experiment_manager.disable_start()
 
     def on_start_any(self):
         """What to do when stimulation or experiment is started"""
@@ -69,19 +69,19 @@ class ExperimenterWindow(tk.Tk):
         self.com_port_manager.close_button['state'] = 'normal'
 
     def on_start_stimulation(self):
-        self.experiment_buttons.disable_start()  # disable starting experiment
+        self.experiment_manager.disable_start()  # disable starting experiment
         self.on_start_any()
 
     def on_stop_stimulation(self):
-        self.experiment_buttons.enable_start()  # enable starting experiment
+        self.experiment_manager.enable_start()  # enable starting experiment
         self.on_stop_any()
 
-    def on_start_experiment(self):
+    def on_start_experiment(self, stim_order: StimulationOrder):
         self.stimulation_buttons.disable_buttons()  # disable starting stimulation
         self.on_start_any()
         self.participant_data = ParticipantData()
         # open the participant window
-        self.participant_window = ParticipantWindow(self, self.stimulator, self.stim_order, self.participant_data)
+        self.participant_window = ParticipantWindow(self, self.stimulator, stim_order, self.participant_data)
 
     def on_stop_experiment(self):
         self.stimulation_buttons.enable_start()  # enable starting stimulation
@@ -153,7 +153,7 @@ class _ComPortManager(ttk.Frame):
         """Close the stimulator, activate the Open button, and deactivate the Close button"""
         try:
             self.stimulator.close_com_port()
-            self.port_selector.config(state='normal')
+            self.port_selector.config(state='readonly')
             self.refresh_button.config(state="normal")
             self.open_button.config(state="normal")
             self.close_button.config(state="disabled")
@@ -347,8 +347,8 @@ class _StimulationButtons(ttk.Frame):
                              message=f"The stimulator has reported an error on channel {channel}. Stimulation stopped.")
 
 
-class _ExperimentButtons(ttk.Frame):
-    def __init__(self, master, on_start_experiment: Callable, on_stop_experiment: Callable):
+class _ExperimentManager(ttk.Frame):
+    def __init__(self, master, on_start_experiment: Callable[[StimulationOrder], None], on_stop_experiment: Callable):
         super().__init__(master, borderwidth=2, relief="solid")
         self.on_start_experiment = on_start_experiment
         self.on_stop_experiment = on_stop_experiment
@@ -362,13 +362,28 @@ class _ExperimentButtons(ttk.Frame):
                                             values=[locale.display_name for locale in
                                                     self.locale_manager.available_locales])
 
+        # Directory selector for participant data
+        folder_frame = tk.Frame(self)
+        # folder label
+        ttk.Label(folder_frame, text="Participant Data Folder:").grid(row=0, column=0, columnspan=2, padx=5,
+                                                                      pady=(5, 0))
+        # folder entry field
+        self.folder_entry = tk.Entry(folder_frame, textvariable=Settings().participant_folder_var, width=40)
+        self.folder_entry.icursor(tk.END)  # Move caret to end
+        self.folder_entry.xview_moveto(1)  # Scroll so the end is visible
+        self.folder_entry.grid(row=1, column=0, padx=5, pady=(0, 5))
+        # browse button
+        tk.Button(folder_frame, text='📁', command=self.select_participant_folder).grid(row=1, column=1)
+
+        # Start and stop buttons
         self.start_exp_button = ttk.Button(self, text='▶ Start Experiment', state='disabled', command=self.on_start)
         self.stop_exp_button = ttk.Button(self, text='🟥 Stop Experiment', state='disabled', command=self.on_stop)
 
         self.title.grid(row=0, column=0, columnspan=2, padx=5, pady=5)
         self.locale_selector.grid(row=1, column=0, columnspan=2, padx=5, pady=5)
-        self.start_exp_button.grid(row=2, column=0, padx=5, pady=5)
-        self.stop_exp_button.grid(row=2, column=1, padx=5, pady=5)
+        folder_frame.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
+        self.start_exp_button.grid(row=3, column=0, padx=5, pady=5, sticky='e')
+        self.stop_exp_button.grid(row=3, column=1, padx=5, pady=5, sticky='w')
 
     def enable_start(self):
         self.start_exp_button['state'] = 'normal'
@@ -377,16 +392,47 @@ class _ExperimentButtons(ttk.Frame):
         self.start_exp_button['state'] = 'disabled'
 
     def on_start(self):
-        # Set the locale for the new window
-        self.locale_manager.set_locale(self.language_var.get())
-        self.locale_selector['state'] = 'disabled'
+        """Start the experiment."""
+        possible_stim_order = self.validate_participant_folder()
+        if possible_stim_order is not None:
+            # Set the locale for the new window
+            self.locale_manager.set_locale(self.language_var.get())
+            self.locale_selector['state'] = 'disabled'
 
-        self.on_start_experiment()
-        self.start_exp_button['state'] = 'disabled'
-        self.stop_exp_button.config(state='normal', style='EnabledStopButton.TButton')
+            # If we reach this possible_stim_order will contain a proper StimulationOrder
+            self.on_start_experiment(possible_stim_order)
+            self.start_exp_button['state'] = 'disabled'
+            self.stop_exp_button.config(state='normal', style='EnabledStopButton.TButton')
 
     def on_stop(self):
         self.on_stop_experiment()
         self.locale_selector['state'] = 'readonly'
         self.start_exp_button['state'] = 'normal'
         self.stop_exp_button.config(state='disabled', style='TButton')
+
+    def select_participant_folder(self):
+        """Open a file dialog to select a folder for participant data."""
+        folder_name = filedialog.askdirectory(title='Select participant data folder')
+        if folder_name:
+            Settings().participant_folder_var.set(folder_name)
+        self.folder_entry.icursor(tk.END)  # Move caret to end
+        self.folder_entry.xview_moveto(1)  # Scroll so the end is visible
+
+    @staticmethod
+    def validate_participant_folder() -> Optional[StimulationOrder]:
+        """Check if the participant folder contains the necessary files (stimulation order and potentially calibration order).
+        :return: The StimulationOrder if it could be read. None otherwise."""
+        # todo add calibration order
+        s = Settings()
+        # noinspection PyBroadException
+        try:
+            stim_order = StimulationOrder.from_file(s.get_stim_order_path())
+            return stim_order
+        except FileNotFoundError:
+            messagebox.showerror("File Not Found",
+                                 f"The stimulation order file '{s.get_stim_order_path()}' was not found in the given directory.")
+            return None
+        except Exception:
+            messagebox.showerror("File Error",
+                                 f"There was an error regarding the stimulation order in the given directory:\n\n{traceback.format_exc()}")
+            return None

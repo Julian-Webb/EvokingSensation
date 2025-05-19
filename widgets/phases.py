@@ -132,6 +132,8 @@ class SensoryPhase(_BasePhase):
         s = Settings()
         # update the pulse configuration
         for channel in self.stim_order.current_trial().channels:
+            # todo delete
+            print(f'Channel configured: {channel=}')
             self.stimulator.rectangular_pulse(channel, s.get_stimulation_parameters())
         self.stimulator.stimulate_ml(s.stim_duration.get(), self.query_after_stimulation, self.on_stimulation_error)
         self.show_frame(StimulationFrame(self))

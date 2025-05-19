@@ -10,7 +10,7 @@ class Settings:
     """singleton Settings for the stimulation application.
 
     Attributes:
-        participant_data_dir: The tk.StringVar which stores the base directory for the participant data.
+        participant_folder_var: The tk.StringVar which stores the base directory for the participant data.
         amplitude: The tk.DoubleVar for amplitude in milli ampere.
         frequency: The tk.DoubleVar for frequency in Hz.
         phase_duration: The tk.IntVar for phase duration in microseconds.
@@ -51,7 +51,8 @@ class Settings:
             # Variable for the path
             # todo handling for actual path
             base_path = 'C:\\Users\\julia\\PycharmProjects\\EvokingSensation'
-            ci.participant_data_dir = tk.StringVar(value=os.path.join(base_path, 'data', 'test_participant'))
+            # ci.participant_data_dir = tk.StringVar(value=os.path.join(base_path, 'data', 'test_participant'))
+            ci.participant_folder_var = tk.StringVar(value=os.path.join(base_path, 'data', 'test_participant'))
 
             # Initialize tk.IntVars / tk.DoubleVars for all parameters corresponding to their type
             for property_name, options in cls.PARAMETER_OPTIONS.items():
@@ -66,31 +67,31 @@ class Settings:
 
         return cls._instance
 
-    def get_stimulation_parameters(self):
+    def get_stimulation_parameters(self) -> StimulationParameters:
         """
         :return: StimulationParameters object with the current configuration of amplitude, phase duration, interphase interval, and period.
         """
         return StimulationParameters(self.amplitude.get(), self.phase_duration.get(), self.interphase_interval.get(),
                                      self.period_numeric())
 
-    def _update_period_from_frequency(self, *_):
+    def _update_period_from_frequency(self, *_) -> None:
         """Update the period based on the frequency."""
         try:
             self.period_string_var.set(f"{self.period_numeric():.2f}")
         except (ValueError, ZeroDivisionError, tk.TclError):
             self.period_string_var.set('Invalid Frequency Value')
 
-    def period_numeric(self):
+    def period_numeric(self) -> float:
         return (1 / self.frequency.get()) * 1000  # Convert to milliseconds
 
-    def get_stim_order_path(self):
+    def get_stim_order_path(self) -> str:
         """The path for the stimulation order file."""
-        return os.path.join(self.participant_data_dir.get(), 'stimulation_order.xlsx')
+        return os.path.join(self.participant_folder_var.get(), 'stimulation_order.xlsx')
 
-    def get_sensation_data_path(self):
+    def get_sensation_data_path(self) -> str:
         """The path for the file storing the sensation data the participant entered."""
-        return os.path.join(self.participant_data_dir.get(), 'sensation_data.json')
+        return os.path.join(self.participant_folder_var.get(), 'sensation_data.json')
 
-    def get_calibration_data_path(self):
+    def get_calibration_data_path(self) -> str:
         """The path for the file storing what happened during calibration"""
-        return os.path.join(self.participant_data_dir.get(), 'calibration_data.json')
+        return os.path.join(self.participant_folder_var.get(), 'calibration_data.json')
