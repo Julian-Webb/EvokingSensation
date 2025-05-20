@@ -45,8 +45,8 @@ class ExperimenterWindow(tk.Tk):
                       self.experiment_manager,):
             frame.pack(padx=10, pady=10)
 
-        # self.com_port_manager.open_port()  # todo delete after testing
-        # self.on_start_experiment()  # todo delete after testing
+        # self.com_port_manager.open_port()  # todo ON_LAUNCH delete
+        # self.on_start_experiment()  # todo ON_LAUNCH delete
 
     def on_port_opened(self):
         """What to do when the port is successfully opened."""
@@ -86,8 +86,7 @@ class ExperimenterWindow(tk.Tk):
     def on_stop_experiment(self):
         self.stimulation_buttons.enable_start()  # enable starting stimulation
         self.on_stop_any()
-        # todo more here?
-        # todo stop stimulation
+        self.stimulator.stop_stimulation()
         self.participant_window.destroy()  # close the participant window
         self.participant_window = None
 
@@ -347,10 +346,10 @@ class _StimulationButtons(ttk.Frame):
 
 
 class _ExperimentManager(ttk.Frame):
-    def __init__(self, master, on_start_experiment: Callable[[StimulationOrder], None], on_stop_experiment: Callable):
+    def __init__(self, master, on_start_experiment: Callable[[StimulationOrder], None], on_stop_experiment_callback: Callable):
         super().__init__(master, borderwidth=2, relief="solid")
         self.on_start_experiment = on_start_experiment
-        self.on_stop_experiment = on_stop_experiment
+        self.on_stop_experiment_callback = on_stop_experiment_callback
 
         self.title = ttk.Label(self, text="Experiment", style='Heading3.TLabel')
 
@@ -404,7 +403,7 @@ class _ExperimentManager(ttk.Frame):
             self.stop_exp_button.config(state='normal', style='EnabledStopButton.TButton')
 
     def on_stop(self):
-        self.on_stop_experiment()
+        self.on_stop_experiment_callback()
         self.locale_selector['state'] = 'readonly'
         self.start_exp_button['state'] = 'normal'
         self.stop_exp_button.config(state='disabled', style='TButton')
