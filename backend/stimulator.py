@@ -232,7 +232,6 @@ class Stimulator:
         """Checks is the device is reporting an issue during stimulation."""
         # This code is copied and adapted from the notebook P24_ml_eight_channels.ipynb from the ScienceMode
         # python wrapper.
-        # TODO adjust this whole function for multiple channels (check example notebook)
         self.ml_get_current_data_ack.packet_number = sm.smpt_packet_number_generator_next(self.device)
         while sm.smpt_new_packet_received(self.device):
             # Clear up the acknowledgment structure
@@ -250,15 +249,15 @@ class Stimulator:
                     f"Couldn't get the ml_get_current_data acknowledgement. (smpt_get_ml_get_current_data_ack: {ret})")
 
             # Check for an error on all active channels
-            # TODO this hasn't been tested yet
             for channel_adj in self._active_channels_adjusted:
                 error_on_channel = self.ml_get_current_data_ack.channel_data.channel_state[channel_adj]
                 if bool(error_on_channel):
                     channel_input = channel_adj + 1  # adjust for 0-indexing
-                    logging.error(f"There's an error on channel {channel_input}.")
+                    logging.error(f"There's an error on channel {channel_input}. Stopping stimulation.")
+                    self.stop_stimulation()
                     on_error(channel_input)
+                    break # We don't check for further errors because the stimulation is stopped
                 # else:
-                #     # todo this else can be deleted later
                 #     channel_input = channel_adj + 1
                 #     logging.debug(f"No error on channel {channel_input}.")
 
@@ -287,8 +286,7 @@ class Stimulator:
             if self.start_time is not None:
                 msg += f' Stimulation time: {time.perf_counter() - self.start_time:.5f} s'
             else:
-                logging.warning('No start time recorded. Probably because stimulation was not started. '
-                                'This piece of code should not be reached.')
+                logging.warning('No start time recorded. This should only occur if the stimulation was not started.')
             logging.info(msg)
         else:
             msg = "Failed to send stop signal to stimulator."

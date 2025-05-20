@@ -22,7 +22,7 @@ class Settings:
     _instance = None
 
     # Countdown duration before stimulation
-    COUNTDOWN_DURATION = 3  # todo ON_LAUNCH change to 3
+    COUNTDOWN_DURATION = 1  # todo ON_LAUNCH change to 3
 
     PARAMETER_OPTIONS = OrderedDict(
         {

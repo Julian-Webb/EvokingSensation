@@ -6,6 +6,7 @@ from typing import Callable
 
 class TextAndButtonFrame(tk.Frame):
     def __init__(self, master, title_text: str, button_text: str, command: Callable, body_text: str = '', ):
+        """A simple Frame with a title, optional body text, and a button."""
         super().__init__(master)
         ttk.Label(self, text=title_text, style='Heading1.TLabel').pack(pady=(40, 20))
 

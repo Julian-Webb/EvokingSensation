@@ -340,8 +340,7 @@ class _StimulationButtons(ttk.Frame):
 
     def _on_error(self, channel: int):
         """What to do if the stimulator responds with an error."""
-        logging.debug('In _on_error')
-        self.stimulator.stop_stimulation()
+        logging.debug(f'A stimulation error occurred on channel {channel}')
         self._on_stimulation_finish()
         messagebox.showerror(title="Stimulator Error.",
                              message=f"The stimulator has reported an error on channel {channel}. Stimulation stopped.")

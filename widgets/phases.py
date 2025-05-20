@@ -35,11 +35,12 @@ class _BasePhase(tk.Frame):
         raise NotImplementedError
 
     def on_stimulation_error(self, channel: int):
-        self.stimulator.stop_stimulation()
         messagebox.showerror(title="Stimulator Error.",
                              message=f"The stimulator has reported an error on channel {channel}. Stimulation stopped.")
-        raise StimulatorError('The stimulator signaled an error.')
-        # todo decide what the program should do now. It currently just get's stuck in the StimulationFrame
+        # todo LATER add German translation
+        self.show_frame(TextAndButtonFrame(self, title_text=_('Stimulator Error'), body_text=_(
+            'The stimulator has encountered an error.\nPlease ask the experimenter to fix any issues.\nThen, the trial will be repeated.'),
+                                           button_text='▶ ' + _('Continue Stimulation'), command=self.start_countdown))
 
     def query_after_stimulation(self):
         raise NotImplementedError
@@ -132,8 +133,6 @@ class SensoryPhase(_BasePhase):
         s = Settings()
         # update the pulse configuration
         for channel in self.stim_order.current_trial().channels:
-            # todo delete
-            print(f'Channel configured: {channel=}')
             self.stimulator.rectangular_pulse(channel, s.get_stimulation_parameters())
         self.stimulator.stimulate_ml(s.stim_duration.get(), self.query_after_stimulation, self.on_stimulation_error)
         self.show_frame(StimulationFrame(self))
