@@ -7,6 +7,7 @@ from backend.settings import Settings
 from backend.stimulation_order import StimulationOrder
 from backend.stimulator import Stimulator, StimulatorError
 from backend.participant_data import ParticipantData
+from .countdown_timer import CountdownTimer
 from .evoked_sensations_frame import EvokedSensationsFrame
 from .phase_frames import *
 
@@ -27,9 +28,14 @@ class _BasePhase(tk.Frame):
         self.columnconfigure(0, weight=1)
 
     def start_countdown(self):
-        countdown_frame = CountdownFrame(self, Settings.COUNTDOWN_DURATION, self.stimulate)
-        self.show_frame(countdown_frame)
-        countdown_frame.start_countdown()
+        if Settings.COUNTDOWN_DURATION > 0:
+            countdown_frame = CountdownFrame(self, Settings.COUNTDOWN_DURATION, self.stimulate)
+            self.show_frame(countdown_frame)
+            countdown_frame.start_countdown()
+        else:
+            # This case is just for development
+            self.stimulate()
+
 
     def stimulate(self):
         raise NotImplementedError
@@ -163,10 +169,12 @@ class SensoryPhase(_BasePhase):
 
     def on_end_of_block(self, completed_block_number: int, n_blocks: int):
         # TODO add forced pause
-        self.show_frame(TextAndButtonFrame(self, _('Block {} of {} Completed').format(completed_block_number, n_blocks),
-                                           '▶ ' + _('Continue stimulation'), self.start_countdown,
-                                           _('Time for a 5 minute break')))
+        self.show_frame(EndOfBlockFrame(self, completed_block_number, n_blocks, self.start_countdown))
+        # timer = CountdownTimer(None, Settings().BREAK_AFTER_BLOCK_DURATION_SEC, )
+        # self.show_frame(TextAndButtonFrame(self, _('Block {} of {} Completed').format(completed_block_number, n_blocks),
+        #                                    '▶ ' + _('Continue stimulation'), self.start_countdown,
+        #                                    _('Time for a 5 minute break')))
 
     @override
     def on_end_of_phase(self):
-        self.show_frame(ExperimentCompleted(self))
+        self.show_frame(ExperimentCompletedFrame(self))

@@ -22,6 +22,7 @@ class AppStyle(ttk.Style):
         self.configure("Heading3.TLabel", font=(base_font, 16, "bold"))
 
         self.configure("Bold.TLabel", font=(base_font, 14, 'bold'))
+        self.configure("Italic.TLabel", font=(base_font, 14, 'italic'))
         self.configure("Body.TLabel", font=(base_font, 14))
         self.configure("Small.TLabel", font=(base_font, 10))
 
