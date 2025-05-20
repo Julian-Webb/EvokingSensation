@@ -3,15 +3,24 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Callable
 
+from backend.settings import Settings
+from widgets.countdown_timer import CountdownTimer
+
 
 class TextAndButtonFrame(tk.Frame):
-    def __init__(self, master, title_text: str, button_text: str, command: Callable, body_text: str = '', ):
-        """A simple Frame with a title, optional body text, and a button."""
+    def __init__(self, master, title_text: str, button_text: str, command: Callable, body_text: str = ''):
+        """A simple Frame with a title, optional body text, and a button.
+        :param master: The parent widget.
+        :param title_text: The title text.
+        :param button_text: The button text.
+        :param command: The command to execute when the button is pressed.
+        :param body_text: Optional body text."""
         super().__init__(master)
         ttk.Label(self, text=title_text, style='Heading1.TLabel').pack(pady=(40, 20))
 
         if body_text != '':
             ttk.Label(self, text=body_text).pack(pady=20)
+
         ttk.Button(self, text=button_text, padding=(20, 20), command=command).pack(padx=20, pady=20)
 
 
@@ -88,7 +97,28 @@ class InputIntensityFrame(tk.Frame):
         self.continue_button.grid(row=2, column=0, padx=(20, 5), pady=(20, 0), sticky='w')
 
 
-class ExperimentCompleted(tk.Frame):
+class EndOfBlockFrame(tk.Frame):
+    def __init__(self, master, completed_block_number: int, n_blocks: int, on_continue: Callable[[], None], ):
+        super().__init__(master)
+        # title
+        ttk.Label(self, text=_('Block {} of {} Completed').format(completed_block_number, n_blocks),
+                  style='Heading1.TLabel').pack(pady=(40, 20))
+
+        # instructions
+        # todo localization
+        ttk.Label(self, text=_('Time for a break')).pack(pady=20)
+
+        # timer and continue button
+        continue_button = ttk.Button(self, text='▶ ' + _('Continue stimulation'), state='disabled', padding=(20, 20),
+                                     command=on_continue)
+        timer = CountdownTimer(self, Settings().BREAK_AFTER_BLOCK_DURATION_SEC,
+                               lambda: continue_button.config(state='normal'))
+        timer.pack(pady=20)
+        continue_button.pack(padx=20, pady=20)
+        timer.start_timer()
+
+
+class ExperimentCompletedFrame(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
         title = ttk.Label(self, text=_('Experiment Complete'), style='Heading1.TLabel')

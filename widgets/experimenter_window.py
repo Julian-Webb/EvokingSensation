@@ -241,20 +241,19 @@ class _ParameterManager(ttk.Frame):
             spinbox.config(state=state)
 
 
-# noinspection PyTypeChecker
 class _Timer(ttk.Frame):
     """This class manages the timer for the stimulation duration."""
 
     def __init__(self, master):
-        super().__init__(master, borderwidth=2, relief="solid")
+        super().__init__(master)
         self.start_time = None
         self.keep_running = False  # Whether the timer should keep running
 
         self.timer_label = ttk.Label(self, text="Timer:")
         self.timer_label.pack(side="left", padx=5, pady=5)
 
-        self.timer_var = tk.StringVar(self, value='00:00')
-        self.duration_label = ttk.Label(self, textvariable=self.timer_var)
+        self.timer_var = tk.StringVar(self, value='00.00')
+        self.duration_label = ttk.Label(self, textvariable=self.timer_var, style='Italic.TLabel')
         self.duration_label.pack(side="left", padx=5, pady=5)
 
         self.unit_label = ttk.Label(self, text="s")
@@ -270,7 +269,7 @@ class _Timer(ttk.Frame):
         """Update the timer display."""
         if self.keep_running:
             elapsed_time = time.perf_counter() - self.start_time
-            self.timer_var.set(f"{elapsed_time:.2f}")
+            self.timer_var.set(f"{elapsed_time:05.2f}")
             self.after(10, self._update_timer)
 
     def stop_timer(self):
@@ -344,7 +343,8 @@ class _StimulationButtons(ttk.Frame):
 
 
 class _ExperimentManager(ttk.Frame):
-    def __init__(self, master, on_start_experiment: Callable[[StimulationOrder], None], on_stop_experiment_callback: Callable):
+    def __init__(self, master, on_start_experiment: Callable[[StimulationOrder], None],
+                 on_stop_experiment_callback: Callable):
         super().__init__(master, borderwidth=2, relief="solid")
         self.on_start_experiment = on_start_experiment
         self.on_stop_experiment_callback = on_stop_experiment_callback
