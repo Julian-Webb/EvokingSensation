@@ -66,7 +66,6 @@ class CalibrationPhase(_BasePhase):
     def stimulate(self):
         s = Settings()
         # update the pulse configuration
-        # todo might want to get the channels from a file here.
         self.stimulator.rectangular_pulse(s.channel.get(), s.get_stimulation_parameters())
         self.stimulator.stimulate_ml(s.stim_duration.get(), self.query_after_stimulation, self.on_stimulation_error)
         self.show_frame(StimulationFrame(self))
@@ -78,8 +77,6 @@ class CalibrationPhase(_BasePhase):
     def on_continue_after_querying(self, intensity: str):
         """Save the stimulation amplitude and reported intensity and adjust the amplitude based on the intensity selected by the participant.
         :param intensity: The intensity selected by the participant."""
-        # TODO this function doesn't continue yet if the amplitude is at its minimum/maximum but the participant doesn't
-        #  feel a very strong sensation. How should this be handled?
         # Save stimulation parameters
         self.participant_data.update_calibration_data(Settings().amplitude.get(), intensity)
 

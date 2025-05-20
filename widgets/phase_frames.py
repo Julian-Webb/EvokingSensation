@@ -23,9 +23,7 @@ class CountdownFrame(tk.Frame):
         self.on_finish = on_finish
 
         self.duration_label = ttk.Label(self, textvariable=self.duration_var, style='Heading2.TLabel')
-        # todo center widget
         self.duration_label.pack(pady=(100, 0))
-        # self.duration_label.place(relx=0.5, rely=0.5, anchor='center')
 
     def start_countdown(self):
         self.after(1000, self._countdown, [])  # empty list for unused *args

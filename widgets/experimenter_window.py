@@ -309,8 +309,6 @@ class _StimulationButtons(ttk.Frame):
     def disable_buttons(self):
         """Disabled the start and stop buttons (for when the port is closed)."""
         self.start_button['state'] = 'disabled'
-        # todo maybe I can remove the next line this since the button should be disabled anyway if the stimulation
-        #  isn't running and then the port can't be closed
         self.stop_button['state'] = 'disabled'
 
     def _on_start(self):
@@ -420,7 +418,7 @@ class _ExperimentManager(ttk.Frame):
     def validate_participant_folder() -> Optional[StimulationOrder]:
         """Check if the participant folder contains the necessary files (stimulation order and potentially calibration order).
         :return: The StimulationOrder if it could be read. None otherwise."""
-        # todo add calibration order
+        # todo ON_LAUNCH add calibration order if necessary
         s = Settings()
         # noinspection PyBroadException
         try:
