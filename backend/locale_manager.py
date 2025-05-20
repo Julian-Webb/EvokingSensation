@@ -18,7 +18,7 @@ class LocaleManager:
 
     def __init__(self):
         """Centralized locale management"""
-        self._current_locale: LocaleInfo = self.LOCALES['English'] # todo change back to german
+        self._current_locale: LocaleInfo = self.LOCALES['English'] # todo ON_LAUNCH change back to German
         self._setup_gettext()
         self.set_locale(self._current_locale.display_name)
 

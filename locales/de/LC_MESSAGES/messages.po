@@ -189,11 +189,11 @@ msgstr "Kalibrierungsphase abgeschlossen!"
 
 #: widgets/phases.py:119
 msgid "Continue to sensory response phase"
-msgstr "Weiter zu Empfindungsphase"
+msgstr "Weiter zu Wahrnehmungsphase"
 
 #: widgets/phases.py:127
 msgid "Sensory Response Phase"
-msgstr "Empfindungsphase"
+msgstr "Wahrnehmungsphase"
 
 #: widgets/phases.py:168
 msgid "Block {} of {} Completed"

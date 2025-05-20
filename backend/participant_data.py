@@ -21,11 +21,11 @@ class ParticipantData:
         """Update and save the sensation data for a trial.
         :param trial_info: The information for this trial.
         :param sensations: A list of the different sensations for this trial"""
-        # todo use upacking of trial_info or something to make this more concise
         self.sensation_data[trial_info.overall_trial] = {'timestamp': datetime.now().isoformat(),
-                                                         'block': trial_info.block, 'trial': trial_info.trial,
-                                                         'channels': trial_info.channels,
-                                                         'electrodes': trial_info.electrodes, 'sensations': sensations}
+                                                         'sensations': sensations,
+                                                         # Use the correct attributes in trial_info
+                                                         **{key: getattr(trial_info, key) for key in
+                                                            ['block', 'trial', 'channels', 'electrodes']}}
         self.save_sensation_data()
 
     def save_calibration_data(self):

@@ -18,7 +18,7 @@ class TrialInfo:
 
 
 class StimulationOrder:
-    # todo delete
+    # todo AFTER_DISCUSSION handle this for different blocks.
     DEFAULT_ELECTRODE_MAP = {1: (1, 2), 2: (3, 4), 3: (5, 6), 4: (7, 8), 5: (9, 10), 6: (11, 12), 7: (13, 14),
                                       8: (15, 16)}
 
@@ -97,7 +97,6 @@ class StimulationOrder:
     def next_trial(self):
         """Advance to the next trial.
         :return: A dict with the block and trial numbers as well as the channels for the new trial if there is one, else None"""
-        # todo handle end of experiment and block
         # Go to the next trial unless this is the last one.
         if self.overall_trial < len(self.stim_order):
             self.overall_trial += 1
@@ -118,8 +117,8 @@ class StimulationOrder:
 
     def save_as_excel(self, path: str):
         """Saves the stimulation order to .csv file."""
-        # order_copy = self.stim_order.copy(deep=True) # todo use this?
-        order_copy = self.stim_order
+        # A deep copy is made because I'm not sure how making changes such as the color might affect the DataFrame
+        order_copy = self.stim_order.copy(deep=True)
 
         # Alternate the background color of the blocks for readability
         style = self._color_blocks(order_copy)

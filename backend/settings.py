@@ -1,4 +1,5 @@
 import os
+from os.path import abspath, dirname, join
 from collections import OrderedDict
 import tkinter as tk
 from backend.stimulator import StimulationParameters
@@ -21,7 +22,7 @@ class Settings:
     _instance = None
 
     # Countdown duration before stimulation
-    COUNTDOWN_DURATION = 1  # todo change to 3
+    COUNTDOWN_DURATION = 3  # todo ON_LAUNCH change to 3
 
     PARAMETER_OPTIONS = OrderedDict(
         {
@@ -36,7 +37,7 @@ class Settings:
             'stim_duration': {'label': 'Stimulation Duration', 'unit': 's',
                               'range': (0.1, 240), 'increment': 1, 'numeric_type': float,
                               # 'default': 5
-                              'default': 0.1  # todo change back
+                              'default': 0.1  # todo ON_LAUNCH change back
                               },
             'frequency': {'label': 'Frequency', 'unit': 'Hz',
                           'range': (1, 1000), 'increment': 1.0, 'numeric_type': float, 'default': 50.0},
@@ -49,10 +50,8 @@ class Settings:
             ci = cls._instance  # alias for readability
 
             # Variable for the path
-            # todo handling for actual path
-            base_path = 'C:\\Users\\julia\\PycharmProjects\\EvokingSensation'
-            # ci.participant_data_dir = tk.StringVar(value=os.path.join(base_path, 'data', 'test_participant'))
-            ci.participant_folder_var = tk.StringVar(value=os.path.join(base_path, 'data', 'test_participant'))
+            base_path = dirname(dirname(abspath(__file__)))  # the base path of the app
+            ci.participant_folder_var = tk.StringVar(value=join(base_path, 'data', 'test_participant'))
 
             # Initialize tk.IntVars / tk.DoubleVars for all parameters corresponding to their type
             for property_name, options in cls.PARAMETER_OPTIONS.items():
