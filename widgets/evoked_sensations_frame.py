@@ -84,8 +84,8 @@ class _SingleSensationFrame(tk.Frame):
         location_label.grid(row=0, column=0, columnspan=2, padx=5, pady=(0, 5), sticky="w")
 
         # Make inputters for foot and leg
-        foot = LocationInputter(location_frame, LocationType.FOOT, self.location_vars, scaling=0.4)
-        leg = LocationInputter(location_frame, LocationType.LEG, self.location_vars, scaling=0.4)
+        foot = LocationInputter(location_frame, LocationType.FOOT, self.location_vars)
+        leg = LocationInputter(location_frame, LocationType.LEG, self.location_vars)
         foot.grid(row=1, column=0, padx=5, pady=5)
         leg.grid(row=1, column=1, padx=5, pady=5)
 
@@ -119,7 +119,7 @@ class EvokedSensationsFrame(tk.Frame):
         self.on_continue = on_continue
 
         # The canvas is just here to enable scrolling and only contains the main_frame
-        self.canvas = tk.Canvas(self)
+        self.canvas = tk.Canvas(self, highlightthickness=0)
         scrollbar = tk.Scrollbar(self, orient='vertical', command=self.canvas.yview)
 
         scrollbar.grid(row=0, column=1, sticky='ns')

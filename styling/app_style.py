@@ -5,7 +5,7 @@ from tkinter import ttk, font
 
 
 class AppStyle(ttk.Style):
-    """Singleton class for style"""
+    """Class for style"""
 
     def __init__(self):
         super().__init__()
@@ -28,8 +28,5 @@ class AppStyle(ttk.Style):
 
         self.configure("Italic.TButton", font=(base_font, 14, 'italic'))
         self.configure("ErrorText.TLabel", font=(base_font, 14), foreground="red")
-        self.configure("SmallWarning.TButton", font=(base_font, 12), foreground="#EF6A6A"
-)
+        self.configure("SmallWarning.TButton", font=(base_font, 12), foreground="#EF6A6A")
         self.configure("EnabledStopButton.TButton", background="red", foreground="red")
-
-# app_style = AppStyle()

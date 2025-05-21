@@ -46,7 +46,7 @@ class ExperimenterWindow(tk.Tk):
             frame.pack(padx=10, pady=10)
 
         # self.com_port_manager.open_port()  # todo ON_LAUNCH delete
-        # self.on_start_experiment()  # todo ON_LAUNCH delete
+        # self.on_start_experiment(StimulationOrder.from_file(Settings().get_stim_order_path()))  # todo ON_LAUNCH delete
 
     def on_port_opened(self):
         """What to do when the port is successfully opened."""
