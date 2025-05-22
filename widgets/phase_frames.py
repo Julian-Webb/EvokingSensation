@@ -105,7 +105,6 @@ class EndOfBlockFrame(tk.Frame):
                   style='Heading1.TLabel').pack(pady=(40, 20))
 
         # instructions
-        # todo localization
         ttk.Label(self, text=_('Time for a break')).pack(pady=20)
 
         # timer and continue button

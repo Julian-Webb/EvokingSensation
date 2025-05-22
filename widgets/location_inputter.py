@@ -65,9 +65,9 @@ class LocationInputter(tk.Canvas):
         for name, params in checkbox_params.items():
             self.add_checkbutton(name, _(name), params['x_rel'], params['y_rel'], params['background'])
 
-    def add_checkbutton(self, id, display_name, relx: float, rely: float, color: str):
+    def add_checkbutton(self, button_id, display_name, relx: float, rely: float, color: str):
         """Add a checkbutton at the specified coordinates
-        :param id: The English name of the location (e.g. "Calf")
+        :param button_id: The English name of the location (e.g. "Calf")
         :param display_name: The text that the checkbutton shows (e.g. "Calf" or "Schienbein")
         :param relx: The relative x position (0-1)
         :param rely: The relative y position (0-1)
@@ -76,11 +76,11 @@ class LocationInputter(tk.Canvas):
         assert 0 <= relx <= 1
         assert 0 <= rely <= 1
 
-        style_name = f'Custom.{id}.TCheckbutton'
+        style_name = f'Custom.{button_id}.TCheckbutton'
         self.style.configure(style_name, background=color, font=30,
                              indicatorbackground=color,  # make the box itself adjust to the background color
                              )
-        cb = ttk.Checkbutton(self, variable=self.location_vars[id], text=display_name, style=style_name)
+        cb = ttk.Checkbutton(self, variable=self.location_vars[button_id], text=display_name, style=style_name)
         cb.place(relx=relx, rely=rely, anchor='center')
 
     def get_states(self):
@@ -92,7 +92,7 @@ class LocationInputter(tk.Canvas):
 if __name__ == "__main__":
     root = tk.Tk()
 
-    _ = lambda string: string
+    _ = lambda string: string # for gettext
 
     location_vars = {loc: tk.BooleanVar(value=False) for loc in
                      ["D1", "D2", "D3", "D4", "S1", "S2", "S3", "S4", "S5", "Calf", "Shin", ]}

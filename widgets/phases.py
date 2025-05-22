@@ -42,7 +42,6 @@ class _BasePhase(tk.Frame):
     def on_stimulation_error(self, channel: int):
         messagebox.showerror(title="Stimulator Error.",
                              message=f"The stimulator has reported an error on channel {channel}. Stimulation stopped.")
-        # todo LATER add German translation
         self.show_frame(TextAndButtonFrame(self, title_text=_('Stimulator Error'), body_text=_(
             'The stimulator has encountered an error.\nPlease ask the experimenter to fix any issues.\nThen, the trial will be repeated.'),
                                            button_text='▶ ' + _('Continue Stimulation'), command=self.start_countdown))
