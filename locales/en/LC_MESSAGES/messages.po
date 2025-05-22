@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-16 20:16+0200\n"
+"POT-Creation-Date: 2025-05-22 12:53+0200\n"
 "PO-Revision-Date: 2025-05-14 15:48+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -81,11 +81,11 @@ msgstr "Intensity:"
 msgid "Mild"
 msgstr ""
 
-#: widgets/evoked_sensations_frame.py:76 widgets/phase_frames.py:58
+#: widgets/evoked_sensations_frame.py:76 widgets/phase_frames.py:66
 msgid "Moderate"
 msgstr ""
 
-#: widgets/evoked_sensations_frame.py:78 widgets/phase_frames.py:59
+#: widgets/evoked_sensations_frame.py:78 widgets/phase_frames.py:67
 msgid "Strong"
 msgstr ""
 
@@ -113,7 +113,8 @@ msgstr ""
 msgid "+ Add Sensation"
 msgstr "+ Add Sensation"
 
-#: widgets/evoked_sensations_frame.py:186 widgets/phase_frames.py:84
+#: widgets/evoked_sensations_frame.py:186 widgets/phase_frames.py:92
+#: widgets/phases.py:48
 msgid "Continue Stimulation"
 msgstr "Continue stimulation"
 
@@ -129,43 +130,56 @@ msgstr "Not closable"
 msgid "This window must be closed in the experimenter view"
 msgstr "This window must be closed in the experimenter view"
 
-#: widgets/phase_frames.py:48
+#: widgets/phase_frames.py:56
 msgid "Stimulating..."
 msgstr "Stimulating..."
 
-#: widgets/phase_frames.py:55
+#: widgets/phase_frames.py:63
 msgid "Nothing"
 msgstr ""
 
-#: widgets/phase_frames.py:56
+#: widgets/phase_frames.py:64
 msgid "Very weak"
 msgstr ""
 
-#: widgets/phase_frames.py:57
+#: widgets/phase_frames.py:65
 msgid "Weak"
 msgstr ""
 
-#: widgets/phase_frames.py:60
+#: widgets/phase_frames.py:68
 msgid "Very strong"
 msgstr ""
 
-#: widgets/phase_frames.py:61
+#: widgets/phase_frames.py:69
 msgid "Painful"
 msgstr ""
 
-#: widgets/phase_frames.py:71
+#: widgets/phase_frames.py:79
 msgid "Intensity Feedback"
 msgstr "Intensity Feedback"
 
-#: widgets/phase_frames.py:75
+#: widgets/phase_frames.py:83
 msgid "Sensation Intensity:"
 msgstr "Sensation Intensity:"
 
-#: widgets/phase_frames.py:95
+#: widgets/phase_frames.py:104
+msgid "Block {} of {} Completed"
+msgstr ""
+
+#: widgets/phase_frames.py:109
+#, fuzzy
+msgid "Time for a break"
+msgstr "Block Completed! Time for a 5 minute break"
+
+#: widgets/phase_frames.py:112
+msgid "Continue stimulation"
+msgstr "Continue stimulation"
+
+#: widgets/phase_frames.py:124
 msgid "Experiment Complete"
 msgstr ""
 
-#: widgets/phase_frames.py:96
+#: widgets/phase_frames.py:125
 #, fuzzy
 msgid ""
 "Thank you for participating!\n"
@@ -177,35 +191,33 @@ msgstr ""
 "\n"
 "This window can be safely closed now."
 
-#: widgets/phases.py:61
+#: widgets/phases.py:46
+msgid "Stimulator Error"
+msgstr ""
+
+#: widgets/phases.py:47
+msgid ""
+"The stimulator has encountered an error.\n"
+"Please ask the experimenter to fix any issues.\n"
+"Then, the trial will be repeated."
+msgstr ""
+
+#: widgets/phases.py:67
 msgid "Calibration Phase"
 msgstr "Calibration Phase"
 
-#: widgets/phases.py:61 widgets/phases.py:128
+#: widgets/phases.py:67 widgets/phases.py:131
 msgid "Start Stimulation"
 msgstr "Start Stimulation"
 
-#: widgets/phases.py:118
+#: widgets/phases.py:121
 msgid "Calibration Phase Completed!"
 msgstr "Calibration Phase Completed!"
 
-#: widgets/phases.py:119
+#: widgets/phases.py:122
 msgid "Continue to sensory response phase"
 msgstr "Continue to sensory response phase"
 
-#: widgets/phases.py:127
+#: widgets/phases.py:130
 msgid "Sensory Response Phase"
 msgstr "Sensory Response Phase"
-
-#: widgets/phases.py:168
-msgid "Block {} of {} Completed"
-msgstr ""
-
-#: widgets/phases.py:169
-msgid "Continue stimulation"
-msgstr "Continue stimulation"
-
-#: widgets/phases.py:170
-#, fuzzy
-msgid "Time for a 5 minute break"
-msgstr "Block Completed! Time for a 5 minute break"
