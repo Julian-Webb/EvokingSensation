@@ -25,7 +25,7 @@ class ExperimenterWindow(tk.Tk):
         self.participant_data = None
 
         self.title("Experimenter View")
-        self.resizable(False, False)
+        # self.resizable(False, False)
 
         self.participant_window = None
 
@@ -41,12 +41,24 @@ class ExperimenterWindow(tk.Tk):
 
         self.experiment_manager = _ExperimentManager(self, self.on_start_experiment, self.on_stop_experiment)
 
-        for frame in (self.com_port_manager, self.stimulation_buttons, self.parameter_manager,
-                      self.experiment_manager,):
+        for frame in (self.com_port_manager, self.stimulation_buttons, self.parameter_manager):
             frame.pack(padx=10, pady=10)
+        self.experiment_manager.pack(padx=10, pady=10, fill='x', expand=True)
+
+        self.after(100, self.set_minimum_size)
 
         # self.com_port_manager.open_port()  # todo ON_LAUNCH delete
         # self.on_start_experiment(StimulationOrder.from_file(Settings().get_stim_order_path()))  # todo ON_LAUNCH delete
+
+    def set_minimum_size(self):
+        """Set the minimum size of the window to its initial dimensions."""
+        self.update_idletasks()  # Ensure the latest layout changes are updated
+        initial_width = self.winfo_width()
+        initial_height = self.winfo_height()
+
+        # Set the minimum size to the current dimensions
+        self.wm_minsize(initial_width, initial_height)
+
 
     def on_port_opened(self):
         """What to do when the port is successfully opened."""
@@ -359,7 +371,7 @@ class _ExperimentManager(ttk.Frame):
                                                     self.locale_manager.available_locales])
 
         # Directory selector for participant data
-        folder_frame = tk.Frame(self)
+        folder_frame = tk.Frame(self, relief='solid', borderwidth=1)
         # folder label
         ttk.Label(folder_frame, text="Participant Data Folder:").grid(row=0, column=0, columnspan=2, padx=5,
                                                                       pady=(5, 0))
@@ -367,9 +379,11 @@ class _ExperimentManager(ttk.Frame):
         self.folder_entry = tk.Entry(folder_frame, textvariable=Settings().participant_folder_var, width=40)
         self.folder_entry.icursor(tk.END)  # Move caret to end
         self.folder_entry.xview_moveto(1)  # Scroll so the end is visible
-        self.folder_entry.grid(row=1, column=0, padx=5, pady=(0, 5))
+        self.folder_entry.grid(row=1, column=0, padx=5, pady=(0, 5), sticky='ew')
         # browse button
-        tk.Button(folder_frame, text='📁', command=self.select_participant_folder).grid(row=1, column=1)
+        tk.Button(folder_frame, text='📁', command=self.select_participant_folder).grid(row=1, column=1, sticky='e')
+        folder_frame.columnconfigure(0, weight=1)
+        folder_frame.columnconfigure(1, weight=0)
 
         # Start and stop buttons
         self.start_exp_button = ttk.Button(self, text='▶ Start Experiment', state='disabled', command=self.on_start)
@@ -377,9 +391,10 @@ class _ExperimentManager(ttk.Frame):
 
         self.title.grid(row=0, column=0, columnspan=2, padx=5, pady=5)
         self.locale_selector.grid(row=1, column=0, columnspan=2, padx=5, pady=5)
-        folder_frame.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
+        folder_frame.grid(row=2, column=0, columnspan=2, padx=5, pady=5, sticky='ew')
         self.start_exp_button.grid(row=3, column=0, padx=5, pady=5, sticky='e')
         self.stop_exp_button.grid(row=3, column=1, padx=5, pady=5, sticky='w')
+        self.columnconfigure((0, 1), weight=1)
 
     def enable_start(self):
         self.start_exp_button['state'] = 'normal'
