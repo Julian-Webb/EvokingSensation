@@ -1,7 +1,7 @@
 import logging
 import json
 from datetime import datetime
-
+from tkinter import messagebox
 from backend.settings import Settings
 from backend.stimulation_order import TrialInfo
 
@@ -36,9 +36,18 @@ class ParticipantData:
 
     @staticmethod
     def _save_data(path: str, data):
-        try:
-            with open(path, 'w') as file:
-                json.dump(data, file)
-            logging.info(f'Successfully saved data to {path}')
-        except Exception as e:
-            logging.error(f"Error saving dictionary to {path}: {str(e)}")
+        """Save the data to the given path and retry until it has been successfully saved"""
+        while True:
+            try:
+                with open(path, 'w') as file:
+                    json.dump(data, file)
+                logging.info(f'Successfully saved data to {path}')
+                break
+            except Exception as e:
+                logging.error(f"Error saving dictionary to {path}: {str(e)}")
+                messagebox.showerror(
+                    'Error storing data',
+                    'There was an error saving the participant data. '
+                    'Please fix the issue (e.g., close the file or resolve permissions) and try again.'
+                )
+
