@@ -63,8 +63,10 @@ class StimulationOrder:
         for block in range(1, n_blocks + 1):
             for trial in range(1, n_trials_per_block + 1):
                 # Randomly select the number of channels in this trial. Favor lower numbers.
-                n_channels_in_trial = random.choices(range(1, 9), weights=[8, 7, 6, 5, 4, 3, 2, 1])[0]
-                channels = random.sample(range(1, 9), n_channels_in_trial)
+                # n_channels_in_trial = random.choices(range(1, 9), weights=[8, 7, 6, 5, 4, 3, 2, 1])[0]
+                n_channels_in_trial = random.choices(range(1, 3), weights=[4, 1])[0]
+                # channels = random.sample(range(1, 9), n_channels_in_trial)
+                channels = random.sample([1, 8], n_channels_in_trial)
                 electrodes = [channel_electrode_map[channel] for channel in channels]
                 # Set the values
                 order.loc[overall_trial] = {'block': block, 'trial': trial, 'channels': channels,
@@ -151,5 +153,5 @@ class StimulationOrder:
 
 
 if __name__ == '__main__':
-    stim_order = StimulationOrder.generate_new()
-    stim_order.save_as_excel("C:\\Users\\julia\\PycharmProjects\\EvokingSensation\\data\\test_stim_order1.xlsx")
+    stim_order = StimulationOrder.generate_new(n_blocks=2, n_trials_per_block=4)
+    stim_order.save_as_excel(r"C:\Users\julia\PycharmProjects\EvokingSensation\data\pilot0\stimulation_order.xlsx")

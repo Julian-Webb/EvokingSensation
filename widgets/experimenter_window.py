@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 import tkinter as tk
 import traceback
@@ -26,8 +27,10 @@ class ExperimenterWindow(tk.Tk):
 
         self.title("Experimenter View")
         # self.resizable(False, False)
+        self.geometry("+0+0")
 
         self.participant_window = None
+
 
         self.stimulator = Stimulator(self)
 
@@ -45,6 +48,7 @@ class ExperimenterWindow(tk.Tk):
             frame.pack(padx=10, pady=10)
         self.experiment_manager.pack(padx=10, pady=10, fill='x', expand=True)
 
+        # noinspection PyTypeChecker
         self.after(100, self.set_minimum_size)
 
         # self.com_port_manager.open_port()  # todo ON_LAUNCH delete
@@ -58,7 +62,6 @@ class ExperimenterWindow(tk.Tk):
 
         # Set the minimum size to the current dimensions
         self.wm_minsize(initial_width, initial_height)
-
 
     def on_port_opened(self):
         """What to do when the port is successfully opened."""
@@ -282,6 +285,7 @@ class _Timer(ttk.Frame):
         if self.keep_running:
             elapsed_time = time.perf_counter() - self.start_time
             self.timer_var.set(f"{elapsed_time:05.2f}")
+            # noinspection PyTypeChecker
             self.after(10, self._update_timer)
 
     def stop_timer(self):
@@ -371,7 +375,7 @@ class _ExperimentManager(ttk.Frame):
                                                     self.locale_manager.available_locales])
 
         # Directory selector for participant data
-        folder_frame = tk.Frame(self, relief='solid', borderwidth=1)
+        folder_frame = tk.Frame(self)
         # folder label
         ttk.Label(folder_frame, text="Participant Data Folder:").grid(row=0, column=0, columnspan=2, padx=5,
                                                                       pady=(5, 0))
@@ -425,6 +429,8 @@ class _ExperimentManager(ttk.Frame):
         """Open a file dialog to select a folder for participant data."""
         folder_name = filedialog.askdirectory(title='Select participant data folder')
         if folder_name:
+            # replace forward slash with backslash on windows
+            folder_name = os.path.normpath(folder_name)
             Settings().participant_folder_var.set(folder_name)
         self.folder_entry.icursor(tk.END)  # Move caret to end
         self.folder_entry.xview_moveto(1)  # Scroll so the end is visible

@@ -19,7 +19,7 @@ class TextAndButtonFrame(tk.Frame):
         ttk.Label(self, text=title_text, style='Heading1.TLabel').pack(pady=(40, 20))
 
         if body_text != '':
-            ttk.Label(self, text=body_text).pack(pady=20)
+            ttk.Label(self, text=body_text, anchor='center', justify='center').pack(pady=20)
 
         ttk.Button(self, text=button_text, padding=(20, 20), command=command).pack(padx=20, pady=20)
 
@@ -76,25 +76,27 @@ class InputIntensityFrame(tk.Frame):
 
         self.intensity_var = tk.StringVar(self)
 
+        # title and instructions
         title = ttk.Label(self, text=_('Intensity Feedback'), style='Heading1.TLabel')
+        instructions = ttk.Label(self, text=_('How intense was the sensation you felt?'),
+                                 style='Bold.TLabel')
 
         # radio buttons for intensity
         intensity_frame = ttk.Frame(self)
-        intensity_label = ttk.Label(intensity_frame, text=_('Sensation Intensity:'), style='Bold.TLabel')
-        intensity_label.grid(row=0, column=0, padx=(0, 5), pady=10, sticky="w")
 
         for idx, intensity in enumerate(self.INTENSITY_OPTIONS):
             # The command enables continuing only when a button is selected.
             button = ttk.Radiobutton(intensity_frame, variable=self.intensity_var, text=_(intensity), value=intensity,
                                      command=lambda: self.continue_button.config(state='normal'))
-            button.grid(row=0, column=1 + idx, padx=5, pady=5, sticky='w')
+            button.grid(row=0, column=idx, padx=10)
 
         self.continue_button = ttk.Button(self, text='▶ ' + _('Continue Stimulation'), state='disabled', padding=20,
                                           command=lambda: on_continue(self.intensity_var.get()))
         # Arrange objects
-        title.grid(row=0, column=0, padx=20, pady=20, sticky="w")
-        intensity_frame.grid(row=1, column=0, padx=20, pady=20, sticky="w")
-        self.continue_button.grid(row=2, column=0, padx=(20, 5), pady=(20, 0), sticky='w')
+        title.pack(pady=20)
+        instructions.pack(pady=(20, 5))
+        intensity_frame.pack(pady=(5, 20))
+        self.continue_button.pack(pady=20)
 
 
 class EndOfBlockFrame(tk.Frame):
@@ -120,7 +122,9 @@ class EndOfBlockFrame(tk.Frame):
 class ExperimentCompletedFrame(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
-        title = ttk.Label(self, text=_('Experiment Complete'), style='Heading1.TLabel')
-        body = ttk.Label(self, text=_('Thank you for participating!\n\nThis window can be safely closed now.'))
-        title.pack(pady=10)
-        body.pack(pady=10)
+        ttk.Label(self, text='🎉 ' + _('Experiment Complete') + ' 🥳', style='Heading1.TLabel', anchor='center',
+                  justify='center').pack(pady=20)
+        ttk.Label(self, text=_('Thank you for participating!'), anchor='center', justify='center').pack(
+            pady=20)
+        ttk.Label(self, text=_('This window can be safely closed now.'), anchor='center', justify='center', style='Italic.TLabel').pack(
+            pady=(40, 0))

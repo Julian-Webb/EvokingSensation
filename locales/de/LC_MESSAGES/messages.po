@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-22 12:53+0200\n"
+"POT-Creation-Date: 2025-05-22 17:40+0200\n"
 "PO-Revision-Date: 2025-05-14 15:48+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -15,6 +15,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: widgets/countdown_timer.py:33
+msgid "minutes"
+msgstr "Minuten"
+
+#: widgets/countdown_timer.py:36
+msgid " minutes"
+msgstr "Minuten"
 
 #: widgets/evoked_sensations_frame.py:17
 msgid "Calf"
@@ -63,11 +71,11 @@ msgstr "Sonstiges"
 #: widgets/evoked_sensations_frame.py:48
 #: widgets/evoked_sensations_frame.py:235
 msgid "Sensation {}"
-msgstr "Empfindung {}"
+msgstr "Wahrnehmung {}"
 
 #: widgets/evoked_sensations_frame.py:51
 msgid "- Remove sensation"
-msgstr "- Empfindung entfernen"
+msgstr "- Wahrnehmung entfernen"
 
 #: widgets/evoked_sensations_frame.py:57
 msgid "Type:"
@@ -95,7 +103,7 @@ msgstr "Position:"
 
 #: widgets/evoked_sensations_frame.py:165
 msgid "Evoked Sensations"
-msgstr "Hervorgerufene Empfindungen"
+msgstr "Hervorgerufene Wahrnehmungen"
 
 #: widgets/evoked_sensations_frame.py:166
 msgid "Trial {} of {}"
@@ -106,15 +114,15 @@ msgid ""
 "If you felt a sensation, please add it.\n"
 "Otherwise, continue stimulation."
 msgstr ""
-"Wenn Sie eine Empfindung gespürt haben, fügen Sie sie bitte hinzu.\n"
+"Wenn Sie etwas wahrgenommen haben, fügen Sie es bitte hinzu.\n"
 "Sonst, fahren Sie fort."
 
 #: widgets/evoked_sensations_frame.py:181
 msgid "+ Add Sensation"
-msgstr "+ Empfindung hinzufügen"
+msgstr "+ Wahrnehmung hinzufügen"
 
-#: widgets/evoked_sensations_frame.py:186 widgets/phase_frames.py:92
-#: widgets/phases.py:48
+#: widgets/evoked_sensations_frame.py:186 widgets/phase_frames.py:93
+#: widgets/phases.py:46
 msgid "Continue Stimulation"
 msgstr "Stimulation fortsetzen"
 
@@ -154,46 +162,43 @@ msgstr "Sehr stark"
 msgid "Painful"
 msgstr "Schmerzhaft"
 
-#: widgets/phase_frames.py:79
+#: widgets/phase_frames.py:80
 msgid "Intensity Feedback"
 msgstr "Rückmeldung über Intensität"
 
-#: widgets/phase_frames.py:83
-msgid "Sensation Intensity:"
-msgstr "Intensität der Empfindung:"
+#: widgets/phase_frames.py:81
+msgid "How intense was the sensation you felt?"
+msgstr "Wie intensiv war die Wahrnehmung?"
 
-#: widgets/phase_frames.py:104
+#: widgets/phase_frames.py:106
 msgid "Block {} of {} Completed"
 msgstr "Block {} von {} Abgeschlossen"
 
-#: widgets/phase_frames.py:109
-#, fuzzy
+#: widgets/phase_frames.py:110
 msgid "Time for a break"
 msgstr "Zeit für eine Pause."
 
-#: widgets/phase_frames.py:112
+#: widgets/phase_frames.py:113
 msgid "Continue stimulation"
 msgstr "Stimulation fortsetzen"
 
-#: widgets/phase_frames.py:124
+#: widgets/phase_frames.py:125
 msgid "Experiment Complete"
 msgstr "Experiment beendet"
 
-#: widgets/phase_frames.py:125
-msgid ""
-"Thank you for participating!\n"
-"\n"
-"This window can be safely closed now."
-msgstr ""
-"Danke für Ihre Teilnahme!\n"
-"\n"
-"Dieses Fenster kann jetzt geschlossen werden."
+#: widgets/phase_frames.py:127
+msgid "Thank you for participating!"
+msgstr "Danke für Ihre Teilnahme!"
 
-#: widgets/phases.py:46
+#: widgets/phase_frames.py:129
+msgid "This window can be safely closed now."
+msgstr "Dieses Fenster kann jetzt geschlossen werden."
+
+#: widgets/phases.py:44
 msgid "Stimulator Error"
-msgstr ""
+msgstr "Fehler beim Stimulator"
 
-#: widgets/phases.py:47
+#: widgets/phases.py:45
 msgid ""
 "The stimulator has encountered an error.\n"
 "Please ask the experimenter to fix any issues.\n"
@@ -203,22 +208,49 @@ msgstr ""
 "Bitten Sie den Versuchsleiter, den Fehler zu beheben.\n"
 "Dann wird der Durchgang wiederholt."
 
-#: widgets/phases.py:67
+#: widgets/phases.py:66
 msgid "Calibration Phase"
 msgstr "Kalibrierungsphase"
 
-#: widgets/phases.py:67 widgets/phases.py:131
+#: widgets/phases.py:68
+msgid ""
+"The stimulation intensity calibration will now begin.\n"
+"You will receive stimulation and should focus on evaluating the strength of "
+"the sensation.\n"
+"Begin when you are ready."
+msgstr ""
+"Die Kalibrierungsphase der Stimulationsintensität beginnt jetzt.\n"
+"Sie werden stimuliert und sollten auf die Intensität der Wahrnehmung "
+"achten.\n"
+"Wenn Sie bereit sind, starten Sie bitte."
+
+#: widgets/phases.py:71 widgets/phases.py:140
 msgid "Start Stimulation"
 msgstr "Stimulation starten"
 
-#: widgets/phases.py:121
+#: widgets/phases.py:125
 msgid "Calibration Phase Completed!"
 msgstr "Kalibrierungsphase abgeschlossen!"
 
-#: widgets/phases.py:122
+#: widgets/phases.py:126
 msgid "Continue to sensory response phase"
 msgstr "Weiter zu Wahrnehmungsphase"
 
-#: widgets/phases.py:130
+#: widgets/phases.py:134
 msgid "Sensory Response Phase"
 msgstr "Wahrnehmungsphase"
+
+#: widgets/phases.py:136
+msgid ""
+"The stimulation will now continue\n"
+"Please pay attention to the location, intensity, and type (touch, "
+"vibration, ...) of sensation you feel\n"
+"Begin when you are ready."
+msgstr ""
+"Die Stimulation wird jetzt fortgesetzt.\n"
+"Bitte achten Sie auf die Position, Intensität, und Art (Berührung, "
+"Vibration, etc.) der Wahrnehmung.\n"
+"Wenn Sie bereit sind, starten Sie bitte."
+
+#~ msgid "Sensation Intensity:"
+#~ msgstr "Intensität der Wahrnehmung:"

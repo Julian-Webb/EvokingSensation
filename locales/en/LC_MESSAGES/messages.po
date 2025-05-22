@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-22 12:53+0200\n"
+"POT-Creation-Date: 2025-05-22 17:40+0200\n"
 "PO-Revision-Date: 2025-05-14 15:48+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -15,6 +15,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: widgets/countdown_timer.py:33
+msgid "minutes"
+msgstr ""
+
+#: widgets/countdown_timer.py:36
+msgid " minutes"
+msgstr ""
 
 #: widgets/evoked_sensations_frame.py:17
 msgid "Calf"
@@ -113,8 +121,8 @@ msgstr ""
 msgid "+ Add Sensation"
 msgstr "+ Add Sensation"
 
-#: widgets/evoked_sensations_frame.py:186 widgets/phase_frames.py:92
-#: widgets/phases.py:48
+#: widgets/evoked_sensations_frame.py:186 widgets/phase_frames.py:93
+#: widgets/phases.py:46
 msgid "Continue Stimulation"
 msgstr "Continue stimulation"
 
@@ -154,70 +162,90 @@ msgstr ""
 msgid "Painful"
 msgstr ""
 
-#: widgets/phase_frames.py:79
+#: widgets/phase_frames.py:80
 msgid "Intensity Feedback"
 msgstr "Intensity Feedback"
 
-#: widgets/phase_frames.py:83
-msgid "Sensation Intensity:"
-msgstr "Sensation Intensity:"
+#: widgets/phase_frames.py:81
+msgid "How intense was the sensation you felt?"
+msgstr ""
 
-#: widgets/phase_frames.py:104
+#: widgets/phase_frames.py:106
 msgid "Block {} of {} Completed"
 msgstr ""
 
-#: widgets/phase_frames.py:109
+#: widgets/phase_frames.py:110
 #, fuzzy
 msgid "Time for a break"
 msgstr "Block Completed! Time for a 5 minute break"
 
-#: widgets/phase_frames.py:112
+#: widgets/phase_frames.py:113
 msgid "Continue stimulation"
 msgstr "Continue stimulation"
 
-#: widgets/phase_frames.py:124
+#: widgets/phase_frames.py:125
 msgid "Experiment Complete"
 msgstr ""
 
-#: widgets/phase_frames.py:125
+#: widgets/phase_frames.py:127
+msgid "Thank you for participating!"
+msgstr ""
+
+#: widgets/phase_frames.py:129
 #, fuzzy
-msgid ""
-"Thank you for participating!\n"
-"\n"
-"This window can be safely closed now."
+msgid "This window can be safely closed now."
 msgstr ""
 "Experiment Completed!\n"
 "Thank you for participating!\n"
 "\n"
 "This window can be safely closed now."
 
-#: widgets/phases.py:46
+#: widgets/phases.py:44
 msgid "Stimulator Error"
 msgstr ""
 
-#: widgets/phases.py:47
+#: widgets/phases.py:45
 msgid ""
 "The stimulator has encountered an error.\n"
 "Please ask the experimenter to fix any issues.\n"
 "Then, the trial will be repeated."
 msgstr ""
 
-#: widgets/phases.py:67
+#: widgets/phases.py:66
 msgid "Calibration Phase"
 msgstr "Calibration Phase"
 
-#: widgets/phases.py:67 widgets/phases.py:131
+#: widgets/phases.py:68
+msgid ""
+"The stimulation intensity calibration will now begin.\n"
+"You will receive stimulation and should focus on evaluating the strength of "
+"the sensation.\n"
+"Begin when you are ready."
+msgstr ""
+
+#: widgets/phases.py:71 widgets/phases.py:140
 msgid "Start Stimulation"
 msgstr "Start Stimulation"
 
-#: widgets/phases.py:121
+#: widgets/phases.py:125
 msgid "Calibration Phase Completed!"
 msgstr "Calibration Phase Completed!"
 
-#: widgets/phases.py:122
+#: widgets/phases.py:126
 msgid "Continue to sensory response phase"
 msgstr "Continue to sensory response phase"
 
-#: widgets/phases.py:130
+#: widgets/phases.py:134
 msgid "Sensory Response Phase"
 msgstr "Sensory Response Phase"
+
+#: widgets/phases.py:136
+msgid ""
+"The stimulation will now continue\n"
+"Please pay attention to the location, intensity, and type (touch, "
+"vibration, ...) of sensation you feel\n"
+"Begin when you are ready."
+msgstr ""
+
+#~ msgid "Sensation Intensity:"
+#~ msgstr "Sensation Intensity:"

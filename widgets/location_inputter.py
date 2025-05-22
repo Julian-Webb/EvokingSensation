@@ -33,7 +33,7 @@ class LocationInputter(tk.Canvas):
     }
     LEG_CHECKBOXES = {
         "Calf": {"x_rel": 0.32, "y_rel": 0.6, 'background': '#DCDCDC'},
-        "Shin": {"x_rel": 0.62, "y_rel": 0.6, 'background': '#DCDCDC'}
+        "Shin": {"x_rel": 0.67, "y_rel": 0.6, 'background': '#DCDCDC'}
     }
     IMAGES_DIR = Path(__file__).parent.parent / 'images'
 

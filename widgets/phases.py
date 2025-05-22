@@ -35,7 +35,6 @@ class _BasePhase(tk.Frame):
             # This case is just for development
             self.stimulate()
 
-
     def stimulate(self):
         raise NotImplementedError
 
@@ -63,8 +62,14 @@ class CalibrationPhase(_BasePhase):
         super().__init__(master, stimulator, participant_data)
         self.on_end_of_phase = on_phase_over
         self.show_frame(
-            TextAndButtonFrame(self, title_text=_('Calibration Phase'), button_text='▶ ' + _('Start Stimulation'),
-                               command=self.start_countdown))
+            TextAndButtonFrame(self,
+                               title_text=_('Calibration Phase'),
+                               body_text=_(
+                                   'The stimulation intensity calibration will now begin.\n'
+                                   'You will receive stimulation and should focus on evaluating the strength of the sensation.\n'
+                                   'Begin when you are ready.'),
+                               button_text='▶ ' + _('Start Stimulation'),
+                               command=self.start_countdown, ))
 
     @override
     def stimulate(self):
@@ -126,8 +131,14 @@ class SensoryPhase(_BasePhase):
         """The Frame for the sensory phase"""
         super().__init__(master, stimulator, participant_data)
         self.stim_order = stim_order
-        self.show_frame(TextAndButtonFrame(self, _('Sensory Response Phase'),
-                                           '▶ ' + _('Start Stimulation'), self.start_countdown))
+        self.show_frame(TextAndButtonFrame(self, title_text=_('Sensory Response Phase'),
+                                           body_text=_(
+                                               'The stimulation will now continue\n'
+                                               'Please pay attention to the location, intensity, and type (touch, vibration, ...) of sensation you feel\n'
+                                               'Begin when you are ready.'
+                                           ),
+                                           button_text='▶ ' + _('Start Stimulation'),
+                                           command=self.start_countdown))
 
     @override
     def stimulate(self):

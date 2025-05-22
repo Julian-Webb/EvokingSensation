@@ -30,10 +30,10 @@ class CountdownTimer(tk.Frame):
         remaining_time = round(self.duration_seconds - elapsed_time)
 
         if remaining_time <= 0:
-            self.duration_label.config(text='0:00 minutes')
+            self.duration_label.config(text=self.format_time(0) + ' ' + _('minutes'))
             self.on_finish()
         else:
-            self.duration_label.config(text=self.format_time(remaining_time) + ' minutes')
+            self.duration_label.config(text=self.format_time(remaining_time) + ' ' + _(' minutes'))
             # noinspection PyTypeChecker
             self.after(1000, self._update_timer)  # additional args are optional, but it shows a warning
 
