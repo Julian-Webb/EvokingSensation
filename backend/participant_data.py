@@ -40,7 +40,7 @@ class ParticipantData:
         while True:
             try:
                 with open(path, 'w') as file:
-                    json.dump(data, file)
+                    json.dump(data, file, indent=4)
                 logging.info(f'Successfully saved data to {path}')
                 break
             except Exception as e:

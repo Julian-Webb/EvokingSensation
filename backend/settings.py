@@ -11,6 +11,7 @@ class Settings:
     """singleton Settings for the stimulation application.
 
     Attributes:
+        base_path: The base path of the app.
         participant_folder_var: The tk.StringVar which stores the base directory for the participant data.
         amplitude: The tk.DoubleVar for amplitude in milli ampere.
         frequency: The tk.DoubleVar for frequency in Hz.
@@ -51,8 +52,8 @@ class Settings:
             ci = cls._instance  # alias for readability
 
             # Variable for the path
-            base_path = dirname(dirname(abspath(__file__)))  # the base path of the app
-            ci.participant_folder_var = tk.StringVar(value=join(base_path, 'data', 'test_participant'))
+            ci.base_path = dirname(dirname(abspath(__file__)))  # the base path of the app
+            ci.participant_folder_var = tk.StringVar(value=join(ci.base_path, 'data', 'test_participant'))
 
             # Initialize tk.IntVars / tk.DoubleVars for all parameters corresponding to their type
             for property_name, options in cls.PARAMETER_OPTIONS.items():

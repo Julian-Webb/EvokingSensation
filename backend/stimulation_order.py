@@ -1,10 +1,11 @@
 import ast
 import logging
 import random
-from typing import Optional
+from itertools import cycle
 from dataclasses import dataclass
 import pandas as pd
 import numpy as np
+from backend.channel_electrode_maps import CHANNEL_ELECTRODE_MAPS
 
 
 @dataclass
@@ -14,29 +15,19 @@ class TrialInfo:
     block: int
     trial: int
     channels: list[int]
+    channel_electrode_map_id: str
     electrodes: list[tuple[int]]
 
 
 class StimulationOrder:
-    # todo AFTER_DISCUSSION handle this for different blocks.
-    DEFAULT_ELECTRODE_MAP = {1: (1, 2), 2: (3, 4), 3: (5, 6), 4: (7, 8), 5: (9, 10), 6: (11, 12), 7: (13, 14),
-                                      8: (15, 16)}
-
-    def __init__(self, stim_order: pd.DataFrame, channel_electrode_map: dict):
+    def __init__(self, stim_order: pd.DataFrame):
         """This class takes care of creating and storing the order of stimulation regarding blocks, trials, channels,
         and electrode pairs."""
         # The nested list with the order. The levels are blocks > trials > channels.
         self.stim_order: pd.DataFrame = stim_order
 
-        # The mapping of channels to electrodes. It should contain an entry for each channel (1-8) with a
-        # tuple containing the electrodes (1-16)
-        self.channel_electrode_map: Optional[dict] = None
-
         # The index for the overall trial (compared to the trial within a block)
         self.overall_trial: int = 1
-
-        # example channel mapping
-        self.channel_electrode_map = channel_electrode_map
 
     @classmethod
     def from_file(cls, path: str):
@@ -49,18 +40,21 @@ class StimulationOrder:
         order['channels'] = order['channels'].apply(ast.literal_eval)
         order['electrodes'] = order['electrodes'].apply(ast.literal_eval)
 
-        return cls(order, cls.DEFAULT_ELECTRODE_MAP)
+        return cls(order)
 
     @classmethod
     def generate_new(cls, n_blocks: int = 4, n_trials_per_block: int = 8):
         """Create a StimulationOrder instance by generating a new stimulation order."""
-        channel_electrode_map = cls.DEFAULT_ELECTRODE_MAP
 
-        order = pd.DataFrame(columns=['block', 'trial', 'channels', 'electrodes'])
+        order = pd.DataFrame(columns=['block', 'trial', 'channels', 'channel_electrode_map_id', 'electrodes'])
         order.index.name = 'overall trial'
 
+        map_cycle = cycle(CHANNEL_ELECTRODE_MAPS.keys())
         overall_trial = 1
         for block in range(1, n_blocks + 1):
+            # Cyclically iterate through the channel-electrode-maps
+            map_id = next(map_cycle)
+            channel_electrode_map = CHANNEL_ELECTRODE_MAPS[map_id]
             for trial in range(1, n_trials_per_block + 1):
                 # Randomly select the number of channels in this trial. Favor lower numbers.
                 # n_channels_in_trial = random.choices(range(1, 9), weights=[8, 7, 6, 5, 4, 3, 2, 1])[0]
@@ -70,10 +64,10 @@ class StimulationOrder:
                 electrodes = [channel_electrode_map[channel] for channel in channels]
                 # Set the values
                 order.loc[overall_trial] = {'block': block, 'trial': trial, 'channels': channels,
-                                            'electrodes': electrodes}
+                                            'channel_electrode_map_id': map_id, 'electrodes': electrodes}
                 overall_trial += 1
 
-        return cls(order, channel_electrode_map)
+        return cls(order)
 
     def n_trials_in_current_block(self) -> int:
         """Provides the number of trials in the current block."""
@@ -94,7 +88,7 @@ class StimulationOrder:
         block = int(row['block'])
         trial = int(row['trial'])
 
-        return TrialInfo(self.overall_trial, block, trial, row['channels'], row['electrodes'])
+        return TrialInfo(self.overall_trial, block, trial, row['channels'], row['channel_electrode_map_id'], row['electrodes'])
 
     def next_trial(self):
         """Advance to the next trial.
@@ -152,6 +146,12 @@ class StimulationOrder:
         return dataframe.style.apply(color_alternate, axis=1)
 
 
+# Example Usage
 if __name__ == '__main__':
-    stim_order = StimulationOrder.generate_new(n_blocks=2, n_trials_per_block=4)
-    stim_order.save_as_excel(r"C:\Users\julia\PycharmProjects\EvokingSensation\data\pilot0\stimulation_order.xlsx")
+    def generate_stim_order():
+        stim_order = StimulationOrder.generate_new(n_blocks=2, n_trials_per_block=4)
+        stim_order.save_as_excel(
+            r"C:\Users\julia\PycharmProjects\EvokingSensation\data\stimulation_order.xlsx")
+
+
+    generate_stim_order()
