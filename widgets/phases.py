@@ -1,6 +1,6 @@
 import logging
 from tkinter import messagebox
-from typing import Any, override
+from typing import Any, override, Dict
 
 import numpy as np
 
@@ -56,6 +56,16 @@ class _BasePhase(tk.Frame):
 
 
 class CalibrationPhase(_BasePhase):
+    # Mapping of intensity levels to amplitude increments
+    INTENSITY_INCREMENT_MAP: Dict[str, float] = {
+        'Nothing': 3.0,
+        'Very weak': 2.0,
+        'Weak': 1.5,
+        'Moderate': 1.0,
+        'Strong': 0.5,
+        'Very strong': 0.0,
+        'Painful': -1.0
+    }
 
     def __init__(self, master, stimulator: Stimulator, participant_data: ParticipantData, on_phase_over: Callable):
         """The Frame for the calibration phase where the participant can adjust the amplitude of the stimulation."""
@@ -89,25 +99,14 @@ class CalibrationPhase(_BasePhase):
         # Save stimulation parameters
         self.participant_data.update_calibration_data(Settings().amplitude.get(), intensity)
 
-        # Adjust the amplitude
-        if intensity == 'Nothing':
-            increment_ma = 3.0  # increment in milliampere
-        elif intensity == 'Very weak':
-            increment_ma = 2.0
-        elif intensity == 'Weak':
-            increment_ma = 1.5
-        elif intensity == 'Moderate':
-            increment_ma = 1.0
-        elif intensity == 'Strong':
-            increment_ma = 0.5
-        elif intensity == 'Very strong':
-            increment_ma = 0.0
-        elif intensity == 'Painful':
-            increment_ma = -1.0
-        else:
+        # Get intensity increment
+        try:
+            increment_ma = self.INTENSITY_INCREMENT_MAP[intensity]
+        except KeyError:
             raise ValueError(
-                'intensity should be in ["Nothing", "Very weak", "Weak", "Moderate", "Strong", "Very strong", "Painful"]')
+                f"intensity should be in {list(self.INTENSITY_INCREMENT_MAP.keys())} but is '{intensity}'.")
 
+        # adjust amplitude
         if increment_ma != 0.0:
             new_amplitude = Settings().amplitude.get() + increment_ma
             # make sure it's in range
