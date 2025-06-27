@@ -45,7 +45,7 @@ class ScrollableFrame(tk.Frame):
         text = f'Label {self.count}'
         if self.count >= 20:
             text +=  '-------------------------------------------------------------------------------------------------------------------'
-        label = tk.Label(self.labels_frame, text=text).pack()
+        tk.Label(self.labels_frame, text=text).pack()
         self.count += 1
 
 

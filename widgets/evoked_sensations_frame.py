@@ -202,7 +202,7 @@ class EvokedSensationsFrame(tk.Frame):
         canvas_width = event.width
         self.canvas.itemconfig(self.window_id, width=canvas_width)
 
-    def _on_frame_configure(self, event):
+    def _on_frame_configure(self, _event):
         """Update the scroll region when the frame changes size"""
         self.canvas.itemconfig(self.window_id, width=self.canvas.winfo_width())
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
@@ -241,7 +241,7 @@ class EvokedSensationsFrame(tk.Frame):
         # check if continue button should be enabled or disabled now
         self.check_complete_inputs(self)
 
-    def check_complete_inputs(self, *args):
+    def check_complete_inputs(self, *_args):
         """Enable the continue button if all sensations have been filled in and disable if not.
         Should be called every time an input is given."""
         # Check if all inputs have been provided

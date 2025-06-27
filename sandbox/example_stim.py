@@ -1,9 +1,10 @@
 import logging
 import time
 
-from stimulator import Stimulator
+from backend.stimulator import Stimulator, StimulationParameters
 import tkinter as tk
 from tkinter import ttk
+
 logging.basicConfig(level=logging.DEBUG)
 
 # --- Inputs ---
@@ -26,20 +27,23 @@ logging.info(f'Period {period_ms} ms has been derived from frequency {frequency_
 # --- Variables ---
 port = "COM5"
 
+
 # --- The script ---
 def stimulate():
     stimulator.initialize(port)
 
     # --- Pulse configuration ---
     # Configure a rectangular pulse for the specified channel.
-    stimulator.rectangular_pulse(channel, amplitude_mA, phase_duration, interphase_interval, period_ms)
+    stimulator.rectangular_pulse(channel,
+                                 StimulationParameters(amplitude_mA, phase_duration, interphase_interval, period_ms))
 
     # --- Stimulate ---
-    stimulator.stimulate_ml(stim_duration_s, lambda: None)
+    stimulator.stimulate_ml(stim_duration_s, lambda: print('Stimulation over'), lambda channel_error: print(f'error on channel {channel_error}'))
 
     # --- Finalization ---
     time.sleep(stim_duration_s + 0.5)
     stimulator.close_com_port()
+
 
 # --- Initialize device ---
 root = tk.Tk()

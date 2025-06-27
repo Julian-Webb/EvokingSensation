@@ -1,0 +1,9 @@
+future~=1.0.0
+pandas~=2.2.3
+numpy~=2.2.4
+pillow~=10.4.0
+serial~=0.0.97
+pyserial~=3.5
+pycparser~=2.22
+cffi~=1.17.1
+setuptools~=78.1.0

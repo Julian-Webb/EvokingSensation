@@ -23,9 +23,9 @@ class Settings:
     _instance = None
 
     # Countdown duration before stimulation
-    COUNTDOWN_DURATION = 0  # todo ON_LAUNCH change to 3
+    COUNTDOWN_DURATION = 3
 
-    BREAK_AFTER_BLOCK_DURATION_SEC = 2 # todo ON_LAUNCH change to 60*5
+    BREAK_AFTER_BLOCK_DURATION_SEC = 60 * 5
 
     PARAMETER_OPTIONS = OrderedDict(
         {
@@ -39,7 +39,7 @@ class Settings:
                                     'range': (1, 1000), 'increment': 50, 'numeric_type': int, 'default': 500},
             'stim_duration': {'label': 'Stimulation Duration', 'unit': 's',
                               'range': (0.1, 240), 'increment': 1, 'numeric_type': float,
-                              'default': 0.1  # todo ON_LAUNCH change to 5
+                              'default': 5
                               },
             'frequency': {'label': 'Frequency', 'unit': 'Hz',
                           'range': (1, 1000), 'increment': 1.0, 'numeric_type': float, 'default': 50.0},

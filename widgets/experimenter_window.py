@@ -31,7 +31,6 @@ class ExperimenterWindow(tk.Tk):
 
         self.participant_window = None
 
-
         self.stimulator = Stimulator(self)
 
         # Create widgets
@@ -50,9 +49,6 @@ class ExperimenterWindow(tk.Tk):
 
         # noinspection PyTypeChecker
         self.after(100, self.set_minimum_size)
-
-        # self.com_port_manager.open_port()  # todo ON_LAUNCH delete
-        # self.on_start_experiment(StimulationOrder.from_file(Settings().get_stim_order_path()))  # todo ON_LAUNCH delete
 
     def set_minimum_size(self):
         """Set the minimum size of the window to its initial dimensions."""
@@ -439,7 +435,6 @@ class _ExperimentManager(ttk.Frame):
     def validate_participant_folder() -> Optional[StimulationOrder]:
         """Check if the participant folder contains the necessary files (stimulation order and potentially calibration order).
         :return: The StimulationOrder if it could be read. None otherwise."""
-        # todo ON_LAUNCH add calibration order if necessary
         s = Settings()
         # noinspection PyBroadException
         try:

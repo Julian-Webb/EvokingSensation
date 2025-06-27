@@ -39,9 +39,7 @@ class LocationInputter(tk.Canvas):
 
     def __init__(self, master, location_type: LocationType, location_vars: dict[str, tk.BooleanVar],
                  image_width: int = 600):
-        super().__init__(master,
-                         # borderwidth=1, relief='solid'
-                         )
+        super().__init__(master)
         self.location_vars = location_vars
         self.style = ttk.Style()
 
@@ -94,14 +92,14 @@ if __name__ == "__main__":
 
     _ = lambda string: string # for gettext
 
-    location_vars = {loc: tk.BooleanVar(value=False) for loc in
+    loc_vars = {loc: tk.BooleanVar(value=False) for loc in
                      ["D1", "D2", "D3", "D4", "S1", "S2", "S3", "S4", "S5", "Calf", "Shin", ]}
-    LocationInputter(root, LocationType.FOOT, location_vars, image_width=400).pack(side='left', padx=10, pady=10)
-    LocationInputter(root, LocationType.LEG, location_vars, image_width=400).pack(padx=10, pady=10)
+    LocationInputter(root, LocationType.FOOT, loc_vars, image_width=400).pack(side='left', padx=10, pady=10)
+    LocationInputter(root, LocationType.LEG, loc_vars, image_width=400).pack(padx=10, pady=10)
 
 
     def check_states():
-        for name, var in location_vars.items():
+        for name, var in loc_vars.items():
             print(f'{name}: {var.get()}')
         print()
 
